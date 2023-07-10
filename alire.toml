@@ -1,7 +1,11 @@
 name = "syn"
 description = "Shiny new project"
 version = "0.1.0-dev"
+licenses= "GPL-3.0-or-later"
 
 authors = ["Fraser Wilson"]
 maintainers = ["Fraser Wilson <fraser@thewhitelion.eu>"]
 maintainers-logins = ["blancolioni"]
+
+tags = ["pretty", "printing", "generator"]
+website = "https://github.com/blancolioni/syn"
