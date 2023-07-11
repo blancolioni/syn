@@ -4,8 +4,6 @@ private with Ada.Strings.Unbounded;
 
 package Syn is
 
-   type Write_Flag is (Suppress_Argument_Mode);
-
    type Writer_Interface is abstract tagged limited private;
 
    procedure Create (Writer : in out Writer_Interface;
@@ -45,20 +43,6 @@ package Syn is
    procedure Optional_New_Line
      (Writer : in out Writer_Interface)
    is null;
-
-   procedure Push_Flag
-     (Writer : in out Writer_Interface'Class;
-      Flag   : Write_Flag;
-      Value  : Boolean);
-
-   procedure Pop_Flag
-     (Writer : in out Writer_Interface'Class;
-      Flag   : Write_Flag);
-
-   function Is_Set
-     (Writer : Writer_Interface'Class;
-      Flag   : Write_Flag)
-      return Boolean;
 
    procedure Indent (Writer : in out Writer_Interface'Class);
 
@@ -349,22 +333,11 @@ private
 
    type Tab_Stops is array (1 .. 10) of Natural;
 
-   type Write_Flags is array (Write_Flag) of Boolean;
-   type Flag_Stack is array (1 .. 20) of Write_Flags;
-
    type Writer_Interface is abstract tagged limited
       record
          Context  : Write_Context := Compilation_Unit;
          Tabs     : Tab_Stops     := (others => 0);
-         Flags    : Flag_Stack := (others => (others => False));
-         Flag_Top : Natural := 0;
       end record;
-
-   function Is_Set
-     (Writer : Writer_Interface'Class;
-      Flag   : Write_Flag)
-      return Boolean
-   is (Writer.Flag_Top > 0 and then Writer.Flags (Writer.Flag_Top) (Flag));
 
    function To_Ada_Name (Text : String_Access) return String;
    function To_File_Name (Text : String_Access;

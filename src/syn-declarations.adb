@@ -1670,13 +1670,10 @@ package body Syn.Declarations is
             Writer.Optional_New_Line;
          end if;
 
-         if Item.Is_Argument
-           and then (not Writer.Is_Set (Suppress_Argument_Mode)
-                     or else Item.Mode /= In_Argument)
-         then
+         if Item.Is_Argument then
             case Item.Mode is
                when In_Argument =>
-                  Writer.Put ("in     ");
+                  null;
                when Out_Argument =>
                   Writer.Put ("   out ");
                when Inout_Argument =>
@@ -1764,8 +1761,6 @@ package body Syn.Declarations is
          end if;
       end loop;
 
-      Writer.Push_Flag (Suppress_Argument_Mode, Only_In_Arguments);
-
       if Item.Arguments.Last_Index > 0 then
          if Item.Arguments.Last_Index = 1 then
             Writer.Optional_New_Line;
@@ -1798,8 +1793,6 @@ package body Syn.Declarations is
             end;
          end if;
       end if;
-
-      Writer.Pop_Flag (Suppress_Argument_Mode);
 
       if Item.Is_Function then
          if Item.Arguments.Last_Index > 1 then
