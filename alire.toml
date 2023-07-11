@@ -1,6 +1,6 @@
 name = "syn"
 description = "Shiny new project"
-version = "0.1.0-dev"
+version = "0.1.1-dev"
 licenses= "GPL-3.0-or-later"
 
 authors = ["Fraser Wilson"]
