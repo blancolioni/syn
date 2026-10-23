@@ -3,3 +3,14 @@
 
 # Ada Library Information
 *.ali
+
+# Alire and GPRbuild output
+/alire/
+/config/
+/obj/
+/lib/
+/tests/alire/
+/tests/config/
+/tests/obj/
+/tests/bin/
+/tests/output/

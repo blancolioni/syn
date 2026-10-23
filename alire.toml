@@ -1,0 +1,17 @@
+name = "syn"
+description = "Ada source code generation"
+version = "0.1.0-dev"
+
+authors = ["Fraser Wilson"]
+maintainers = ["Fraser Wilson <fraser@thewhitelion.eu>"]
+maintainers-logins = ["blancolioni"]
+licenses = "GPL-3.0-or-later"
+website = "https://github.com/blancolioni/syn"
+tags = ["generator", "pretty", "printing"]
+
+[build-switches]
+"*".ada_version = "Ada2022"
+"*".style_checks = ["-gnatyabcefhiklmnoprst", "-gnaty3"]
+"*".compile_checks = "errors"
+development.contracts = "yes"
+development.runtime_checks = "everything"

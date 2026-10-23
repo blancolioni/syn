@@ -1,0 +1,19 @@
+with "config/syn_tests_config.gpr";
+
+project Syn_Tests is
+
+   for Source_Dirs use ("src/", "config/");
+   for Object_Dir use "obj/" & Syn_Tests_Config.Build_Profile;
+   for Create_Missing_Dirs use "True";
+   for Exec_Dir use "bin";
+   for Main use ("syn_tests.adb");
+
+   package Compiler is
+      for Default_Switches ("Ada") use Syn_Tests_Config.Ada_Compiler_Switches;
+   end Compiler;
+
+   package Binder is
+      for Switches ("Ada") use ("-Es");
+   end Binder;
+
+end Syn_Tests;

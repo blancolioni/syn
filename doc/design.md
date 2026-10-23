@@ -75,7 +75,7 @@ The default style matches GNAT's own, so the output passes `-gnatyabcefhiklmnopr
 - three-space indentation, and continuation lines two spaces in from the construct they continue (`procedure Open` then `  (Client ...`);
 - a 79-character line width;
 - names aligned in declarative lists, parameter lists, record components and named associations;
-- one blank line between declarations, none before `private`, `begin` or `exception`;
+- one blank line between declarations, and before and after `private` in a package specification; none before `begin` or `exception`;
 - no trailing spaces, and one statement per line.
 
 `Syn.Style` makes these settable for projects with a different house style.
