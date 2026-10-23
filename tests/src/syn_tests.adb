@@ -34,9 +34,190 @@ procedure Syn_Tests is
    function Hex (Value : Long_Long_Long_Integer) return not null Node_Access
    is (F.New_Integer_Literal (Value, Base => 16, Group => 4));
 
+   function Body_Tests_Body return not null Node_Access;
+   function Body_Tests_Spec return not null Node_Access;
    function Layout_Tests return not null Node_Access;
    function Timer return not null Node_Access;
    function Timer_Client return not null Node_Access;
+
+   function Call
+     (Prefix    : String;
+      Arguments : Node_Array)
+      return not null Node_Access
+   is (F.New_Call (Prefix, Arguments));
+
+   function Call_Statement
+     (Prefix    : String;
+      Arguments : Node_Array)
+      return not null Node_Access
+   is (F.New_Call_Statement (F.New_Call (Prefix, Arguments)));
+
+   function Invocation_Parameter return not null Node_Access
+   is (F.New_Parameter
+         ("Parameters", Name ("Rose.Invocation.Invocation_Record"),
+          Mode => In_Out_Mode));
+
+   ---------------------
+   -- Body_Tests_Body --
+   ---------------------
+
+   function Body_Tests_Body return not null Node_Access is
+      Handle   : constant not null Node_Access :=
+                   F.New_Procedure ("Handle", [Invocation_Parameter]);
+      Endpoint : constant not null Node_Access := Name ("Set_Timer_Endpoint");
+      Ident    : constant not null Node_Access := Name ("Identifier");
+      Instance : constant not null Node_Access := Name ("Server_Instance");
+   begin
+      return F.New_Compilation_Unit
+        (Context => [F.New_With ("Rose.System_Calls")],
+         Item    =>
+           F.New_Package_Body
+             ("Body_Tests",
+              [F.New_Object ("Counter", Name ("Natural"),
+                             Initial_Value => F.New_Integer_Literal (0)),
+               F.New_Object ("Params",
+                             Name ("Rose.Invocation.Invocation_Record"),
+                             Is_Aliased => True),
+               Handle,
+
+               F.New_Expression_Function
+                 (F.New_Function ("Count", Name ("Natural")),
+                  Name ("Counter")),
+
+               F.New_Subprogram_Body
+                 (Handle,
+                  Declarations =>
+                    [F.New_Use ("Rose.Capabilities"),
+                     F.New_Object ("Cap", Name ("Capability")),
+                     F.New_Object
+                       ("Identifier",
+                        Name ("Rose.Objects.Capability_Identifier"),
+                        Initial_Value => Name ("Parameters.Identifier"),
+                        Is_Constant   => True)],
+                  Statements   =>
+                    [Call_Statement
+                       ("Rose.System_Calls.Initialize_Reply",
+                        [Name ("Parameters"),
+                         Name ("Parameters.Reply_Cap")]),
+                     F.New_If
+                       (F.New_Binary
+                          (Name ("Counter"), "=", F.New_Integer_Literal (0)),
+                        Then_Part =>
+                          [F.New_If
+                             (F.New_Unary
+                                ("not",
+                                 Call ("Rose.Server.Has_Instance",
+                                       [Instance, Endpoint, Ident])),
+                              Then_Part =>
+                                [Call_Statement
+                                   ("Rose.Server.Set_Instance_Cap",
+                                    [Instance, Endpoint, Ident,
+                                     Call ("Rose.Server.Create_Endpoint",
+                                           [Endpoint, Ident])])]),
+                           F.New_Assignment
+                             (Name ("Cap"),
+                              Call ("Rose.Server.Get_Instance_Cap",
+                                    [Instance, Endpoint, Ident]))],
+                        Else_Part =>
+                          [F.New_Assignment
+                             (Name ("Cap"), Name ("Null_Capability"))]),
+                     Call_Statement
+                       ("Rose.System_Calls.Send_Cap",
+                        [Name ("Parameters"), Name ("Cap")])]),
+
+               F.New_Subprogram_Body
+                 (F.New_Function
+                    ("Is_Ready", Name ("Boolean"),
+                     [F.New_Parameter ("Item", Name ("Natural"))]),
+                  Statements =>
+                    [F.New_Block
+                       (Declarations =>
+                          [F.New_Object
+                             ("Twice", Name ("Natural"),
+                              Initial_Value =>
+                                F.New_Binary
+                                  (Name ("Item"), "*",
+                                   F.New_Integer_Literal (2)),
+                              Is_Constant   => True)],
+                        Statements   =>
+                          [F.New_Return
+                             (F.New_Binary
+                                (F.New_Binary
+                                   (Name ("Twice"), ">",
+                                    F.New_Integer_Literal (4)),
+                                 "and then",
+                                 F.New_Unary
+                                   ("not",
+                                    F.New_Binary
+                                      (Name ("Counter"), "=",
+                                       Name ("Item")))))])]),
+
+               F.New_Subprogram_Body
+                 (F.New_Procedure
+                    ("Register",
+                     [F.New_Parameter
+                        ("Context", Name ("Rose.Server.Server_Context"),
+                         Mode => In_Out_Mode)]),
+                  Statements =>
+                    [Call_Statement
+                       ("Rose.Server.Register_Handler",
+                        [Name ("Context"),
+                         Name ("Set_Timer_Endpoint"),
+                         F.New_Attribute (Name ("Handle"), "Access")]),
+                     F.New_Assignment
+                       (Name ("Counter"),
+                        F.New_Binary
+                          (Name ("Counter"), "+",
+                           F.New_Integer_Literal (1)))]),
+
+               F.New_Subprogram_Body (F.New_Procedure ("Reset"))]));
+   end Body_Tests_Body;
+
+   ---------------------
+   -- Body_Tests_Spec --
+   ---------------------
+
+   function Body_Tests_Spec return not null Node_Access is
+   begin
+      return F.New_Compilation_Unit
+        (Context =>
+           [F.New_With ("Rose.Capabilities"),
+            F.New_With ("Rose.Invocation"),
+            F.New_With ("Rose.Objects"),
+            F.New_With ("Rose.Server"),
+            F.New_With ("Rose.Words")],
+         Item    =>
+           F.New_Package
+             ("Body_Tests",
+              [F.New_Access_Procedure_Type
+                 ("Callback", [F.New_Parameter ("Code", Name ("Natural"))]),
+               F.New_Access_Function_Type
+                 ("Set_Timer_Handler",
+                  Result_Type => Name ("Rose.Capabilities.Capability"),
+                  Parameters  =>
+                    [F.New_Parameter
+                       ("Id", Name ("Rose.Objects.Capability_Identifier")),
+                     F.New_Parameter
+                       ("Milliseconds", Name ("Rose.Words.Word")),
+                     F.New_Parameter
+                       ("Cap", Name ("Rose.Capabilities.Capability"))]),
+               F.New_Object
+                 ("Set_Timer_Endpoint", Name ("Rose.Objects.Endpoint_Id"),
+                  Initial_Value => Hex (16#D25E_5101_0B66#),
+                  Is_Constant   => True),
+               F.New_Object
+                 ("Server_Instance", Name ("Rose.Server.Server_Instance")),
+               F.New_Function ("Count", Name ("Natural")),
+               F.New_Function
+                 ("Is_Ready", Name ("Boolean"),
+                  [F.New_Parameter ("Item", Name ("Natural"))]),
+               F.New_Procedure
+                 ("Register",
+                  [F.New_Parameter
+                     ("Context", Name ("Rose.Server.Server_Context"),
+                      Mode => In_Out_Mode)]),
+               F.New_Procedure ("Reset")]));
+   end Body_Tests_Spec;
 
    -----------
    -- Check --
@@ -225,6 +406,8 @@ begin
    Check (Timer);
    Check (Timer_Client);
    Check (Layout_Tests);
+   Check (Body_Tests_Spec);
+   Check (Body_Tests_Body);
 
    if Failures > 0 then
       Ada.Text_IO.Put_Line
