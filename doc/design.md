@@ -63,6 +63,7 @@ The first release covers everything `idle` needs, and the rest of ada-pretty's s
 - **Type definitions:** enumerations, signed integer and modular types, ranges, records (including tagged, limited and with discriminants), private types, derived types, interfaces, arrays and access types.
 - **Statements:** assignment, procedure calls, `if`, `case`, loops (`while`, `for`, `for ... of`), `return` and extended `return`, `declare` blocks, `null`, `raise` (with a message) and exception handlers with choice parameters (`when E : others =>`).
 - **Expressions:** names, selected names, attributes, calls and indexing, operators, parentheses, aggregates, qualified expressions, `if` and `case` expressions, and literals of any size, in any base, with or without underscores (`16#0C71_18A7_C791#`).
+- **SPARK** is written with the general aspect and pragma nodes (`SPARK_Mode`, `Pre`, `Post`, `Global` and so on). Dedicated SPARK nodes are a possible future enhancement.
 - **Comments** on declarations and statements, and a licence header for each unit.
 - **Raw text**, for what the node set does not cover.
 
@@ -86,5 +87,4 @@ The default style matches GNAT's own, so the output passes `-gnatyabcefhiklmnopr
 
 ## Open questions
 
-- **SPARK.** Whether contracts and `SPARK_Mode` need dedicated nodes for `idle`'s possible SPARK target, or aspects are enough.
 - **Project files.** syn-legacy can write GNAT project files (`Syn.Projects`). Whether that belongs in Syn or in the tools that use it.
