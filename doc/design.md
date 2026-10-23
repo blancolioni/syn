@@ -49,6 +49,7 @@ This version replaces [syn-legacy](https://github.com/blancolioni/syn-legacy). I
 | `Syn.Names` | Helpers for Ada names and GNAT file names (`Core_Utilities.Echo` to `core_utilities-echo.ads`). |
 
 - **Nodes are immutable** once built. The factory owns them, and they are freed when the factory is finalised, so callers never manage memory.
+  Every current use is a run-once tool that generates its files and exits, so this is enough. A long-running, server-style user would be the reason to revisit it, for example with reference-counted nodes that can outlive the factory.
 - **Each node produces a document**, and `Syn.Documents` lays out the document for the given width. Nodes never write text themselves.
 - **Syn carries its own printer** in `Syn.Documents`, at least for the first version, rather than depending on a separate implementation of Wadler's algorithm.
 - **Writing a unit** produces the specification and, if any declaration needs one, the body, with the file names GNAT expects.
@@ -85,6 +86,5 @@ The default style matches GNAT's own, so the output passes `-gnatyabcefhiklmnopr
 
 ## Open questions
 
-- **Memory management.** Nodes owned by the factory, freed together, is the plan; the alternative is reference-counted nodes that can outlive the factory.
 - **SPARK.** Whether contracts and `SPARK_Mode` need dedicated nodes for `idle`'s possible SPARK target, or aspects are enough.
 - **Project files.** syn-legacy can write GNAT project files (`Syn.Projects`). Whether that belongs in Syn or in the tools that use it.
