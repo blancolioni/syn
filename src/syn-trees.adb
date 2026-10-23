@@ -1,5 +1,25 @@
 package body Syn.Trees is
 
+   use Syn.Documents;
+
+   -----------
+   -- Lines --
+   -----------
+
+   function Lines
+     (Items : Node_Vectors.Vector;
+      Style : Syn.Style.Settings)
+      return Syn.Documents.Document
+   is
+      Pad    : constant Natural := Max_Defining_Width (Items);
+      Result : Syn.Documents.Document := Empty;
+   begin
+      for Item of Items loop
+         Result := Result & Hard_Line & To_Document (Item, Style, Pad);
+      end loop;
+      return Result;
+   end Lines;
+
    ------------------------
    -- Max_Defining_Width --
    ------------------------

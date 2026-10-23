@@ -1,19 +1,32 @@
+with Ada.Strings.Fixed;
+
+with Syn.Statement_Nodes;
+
 package body Syn.Declaration_Nodes is
 
    use Syn.Documents;
 
    function Declarative_Part
-     (Items : Syn.Trees.Node_Vectors.Vector;
-      Style : Syn.Style.Settings)
+     (Items   : Syn.Trees.Node_Vectors.Vector;
+      Style   : Syn.Style.Settings;
+      Headers : Boolean)
       return Syn.Documents.Document;
    --  Items, one per line with a blank line between each, indented one
-   --  level, with their defining names aligned.
+   --  level, with their defining names aligned. If Headers is True, each
+   --  subprogram body is preceded by a header comment with its name.
 
    function Documents
      (Items : Syn.Trees.Node_Vectors.Vector;
       Style : Syn.Style.Settings;
       Pad   : Natural)
       return Document_Array;
+
+   function Header (Name : String) return Syn.Documents.Document;
+   --  The GNAT-style comment box before a subprogram body:
+   --
+   --     ----------
+   --     -- Name --
+   --     ----------
 
    function Mode_Text (Mode : Parameter_Mode) return String;
 
@@ -23,21 +36,51 @@ package body Syn.Declaration_Nodes is
       return Syn.Documents.Document;
    --  The spaces that pad Name to Pad columns, if it is shorter.
 
+   function Profile
+     (Item  : Subprogram_Node'Class;
+      Style : Syn.Style.Settings)
+      return Syn.Documents.Document;
+   --  The specification of Item, without the final ";" or "is", and not
+   --  grouped, so the caller can add an ending in the same group.
+
+   ---------------
+   -- Body_Name --
+   ---------------
+
+   overriding function Body_Name
+     (Item : Subprogram_Body_Node)
+      return String
+   is (To_String (Subprogram_Node'Class (Item.Specification.all).Name));
+
+   ---------------
+   -- Body_Name --
+   ---------------
+
+   overriding function Body_Name
+     (Item : Expression_Function_Node)
+      return String
+   is (To_String (Subprogram_Node'Class (Item.Specification.all).Name));
+
    ----------------------
    -- Declarative_Part --
    ----------------------
 
    function Declarative_Part
-     (Items : Syn.Trees.Node_Vectors.Vector;
-      Style : Syn.Style.Settings)
+     (Items   : Syn.Trees.Node_Vectors.Vector;
+      Style   : Syn.Style.Settings;
+      Headers : Boolean)
       return Syn.Documents.Document
    is
       Pad    : constant Natural := Syn.Trees.Max_Defining_Width (Items);
       Result : Syn.Documents.Document := Empty;
    begin
       for Item of Items loop
-         Result := Result & Hard_Line & Hard_Line
-           & Syn.Trees.To_Document (Item, Style, Pad);
+         Result := Result & Hard_Line & Hard_Line;
+         if Headers and then Syn.Trees.Body_Name (Item) /= "" then
+            Result := Result & Header (Syn.Trees.Body_Name (Item))
+              & Hard_Line & Hard_Line;
+         end if;
+         Result := Result & Syn.Trees.To_Document (Item, Style, Pad);
       end loop;
       return Nest (Style.Indent, Result);
    end Declarative_Part;
@@ -62,6 +105,22 @@ package body Syn.Declaration_Nodes is
    --------------
 
    overriding function Document
+     (Item  : Use_Node;
+      Style : Syn.Style.Settings;
+      Pad   : Natural)
+      return Syn.Documents.Document
+   is
+      pragma Unreferenced (Style, Pad);
+   begin
+      return Text ((if Item.Use_Type then "use type " else "use ")
+                   & To_String (Item.Name) & ";");
+   end Document;
+
+   --------------
+   -- Document --
+   --------------
+
+   overriding function Document
      (Item  : Package_Node;
       Style : Syn.Style.Settings;
       Pad   : Natural)
@@ -75,14 +134,37 @@ package body Syn.Declaration_Nodes is
          return Result & Hard_Line & Text ("end " & Name & ";");
       end if;
 
-      Result := Result & Declarative_Part (Item.Public_Part, Style);
+      Result := Result & Declarative_Part (Item.Public_Part, Style, False);
 
       if not Item.Private_Part.Is_Empty then
          Result := Result & Hard_Line & Hard_Line & Text ("private")
-           & Declarative_Part (Item.Private_Part, Style);
+           & Declarative_Part (Item.Private_Part, Style, False);
       end if;
 
       return Result & Hard_Line & Hard_Line & Text ("end " & Name & ";");
+   end Document;
+
+   --------------
+   -- Document --
+   --------------
+
+   overriding function Document
+     (Item  : Package_Body_Node;
+      Style : Syn.Style.Settings;
+      Pad   : Natural)
+      return Syn.Documents.Document
+   is
+      pragma Unreferenced (Pad);
+      Name : constant String := To_String (Item.Name);
+   begin
+      if Item.Declarations.Is_Empty then
+         return Text ("package body " & Name & " is")
+           & Hard_Line & Text ("end " & Name & ";");
+      end if;
+
+      return Text ("package body " & Name & " is")
+        & Declarative_Part (Item.Declarations, Style, True)
+        & Hard_Line & Hard_Line & Text ("end " & Name & ";");
    end Document;
 
    --------------
@@ -99,6 +181,10 @@ package body Syn.Declaration_Nodes is
       Result : Syn.Documents.Document :=
                  Text (Name) & Padding (Name, Pad) & Text (" : ");
    begin
+      if Item.Is_Aliased then
+         Result := Result & Text ("aliased ");
+      end if;
+
       if Item.Is_Constant then
          Result := Result & Text ("constant");
          if Item.Object_Type /= null then
@@ -173,20 +259,9 @@ package body Syn.Declaration_Nodes is
          return Text ("type " & Name & " is null record;");
       end if;
 
-      declare
-         Width  : constant Natural :=
-                    Syn.Trees.Max_Defining_Width (Item.Components);
-         Fields : Syn.Documents.Document := Empty;
-      begin
-         for Component of Item.Components loop
-            Fields := Fields & Hard_Line
-              & Syn.Trees.To_Document (Component, Style, Width);
-         end loop;
-
-         return Text ("type " & Name & " is record")
-           & Nest (Style.Indent, Fields)
-           & Hard_Line & Text ("end record;");
-      end;
+      return Text ("type " & Name & " is record")
+        & Nest (Style.Indent, Syn.Trees.Lines (Item.Components, Style))
+        & Hard_Line & Text ("end record;");
    end Document;
 
    --------------
@@ -224,32 +299,50 @@ package body Syn.Declaration_Nodes is
       return Syn.Documents.Document
    is
       pragma Unreferenced (Pad);
-      Is_Function : constant Boolean := Item.Result_Type /= null;
-      Result      : Syn.Documents.Document :=
-                      Text ((if Is_Function then "function " else "procedure ")
-                            & To_String (Item.Name));
    begin
-      if not Item.Parameters.Is_Empty then
-         Result := Result
-           & Nest (Style.Continuation,
-                   Line & Text ("(")
-                   & Align
-                       (Join
-                          (Documents
-                             (Item.Parameters, Style,
-                              Syn.Trees.Max_Defining_Width (Item.Parameters)),
-                           Text (";") & Line))
-                   & Text (")"));
-      end if;
+      return Group (Profile (Item, Style) & Text (";"));
+   end Document;
 
-      if Is_Function then
-         Result := Result
-           & Nest (Style.Continuation + 1,
-                   Line & Text ("return ")
-                   & Syn.Trees.To_Document (Item.Result_Type, Style));
-      end if;
+   --------------
+   -- Document --
+   --------------
 
-      return Group (Result & Text (";"));
+   overriding function Document
+     (Item  : Subprogram_Body_Node;
+      Style : Syn.Style.Settings;
+      Pad   : Natural)
+      return Syn.Documents.Document
+   is
+      pragma Unreferenced (Pad);
+      Specification : Subprogram_Node'Class renames
+                        Subprogram_Node'Class (Item.Specification.all);
+   begin
+      return Group (Profile (Specification, Style)
+                    & If_Flat (Text (" is"), Line & Text ("is")))
+        & Nest (Style.Indent, Syn.Trees.Lines (Item.Declarations, Style))
+        & Hard_Line & Text ("begin")
+        & Syn.Statement_Nodes.Statements (Item.Statements, Style)
+        & Hard_Line
+        & Text ("end " & To_String (Specification.Name) & ";");
+   end Document;
+
+   --------------
+   -- Document --
+   --------------
+
+   overriding function Document
+     (Item  : Expression_Function_Node;
+      Style : Syn.Style.Settings;
+      Pad   : Natural)
+      return Syn.Documents.Document
+   is
+      pragma Unreferenced (Pad);
+   begin
+      return Group
+        (Profile (Subprogram_Node'Class (Item.Specification.all), Style)
+         & If_Flat (Text (" is ("), Line & Text ("is ("))
+         & Syn.Trees.To_Document (Item.Expression, Style)
+         & Text (");"));
    end Document;
 
    ---------------
@@ -271,6 +364,18 @@ package body Syn.Declaration_Nodes is
       end return;
    end Documents;
 
+   ------------
+   -- Header --
+   ------------
+
+   function Header (Name : String) return Syn.Documents.Document is
+      Rule : constant String := Ada.Strings.Fixed."*" (Name'Length + 6, '-');
+   begin
+      return Text (Rule) & Hard_Line
+        & Text ("-- " & Name & " --") & Hard_Line
+        & Text (Rule);
+   end Header;
+
    ---------------
    -- Mode_Text --
    ---------------
@@ -290,5 +395,46 @@ package body Syn.Declaration_Nodes is
       Pad  : Natural)
       return Syn.Documents.Document
    is (Spaces (Natural'Max (0, Pad - Name'Length)));
+
+   -------------
+   -- Profile --
+   -------------
+
+   function Profile
+     (Item  : Subprogram_Node'Class;
+      Style : Syn.Style.Settings)
+      return Syn.Documents.Document
+   is
+      Is_Function : constant Boolean := Item.Result_Type /= null;
+      Kind        : constant String :=
+                      (if Is_Function then "function" else "procedure");
+      Result      : Syn.Documents.Document :=
+                      (if Length (Item.Access_Type_Name) > 0
+                       then Text ("type " & To_String (Item.Access_Type_Name)
+                                  & " is access " & Kind)
+                       else Text (Kind & " " & To_String (Item.Name)));
+   begin
+      if not Item.Parameters.Is_Empty then
+         Result := Result
+           & Nest (Style.Continuation,
+                   Line & Text ("(")
+                   & Align
+                       (Join
+                          (Documents
+                             (Item.Parameters, Style,
+                              Syn.Trees.Max_Defining_Width (Item.Parameters)),
+                           Text (";") & Line))
+                   & Text (")"));
+      end if;
+
+      if Is_Function then
+         Result := Result
+           & Nest (Style.Continuation + 1,
+                   Line & Text ("return ")
+                   & Syn.Trees.To_Document (Item.Result_Type, Style));
+      end if;
+
+      return Result;
+   end Profile;
 
 end Syn.Declaration_Nodes;

@@ -24,6 +24,11 @@ private package Syn.Trees is
    --  The length of Item's defining name, if it is aligned with others
    --  in a list, otherwise zero.
 
+   function Body_Name (Item : Tree_Node) return String is ("");
+   --  The name of the subprogram, if Item is a subprogram body or an
+   --  expression function, otherwise "". A package body puts a header
+   --  comment with this name before each such item.
+
    function To_Document
      (Item  : not null Node_Access;
       Style : Syn.Style.Settings;
@@ -34,6 +39,9 @@ private package Syn.Trees is
    function Defining_Width (Item : not null Node_Access) return Natural
    is (Tree_Node'Class (Item.all).Defining_Width);
 
+   function Body_Name (Item : not null Node_Access) return String
+   is (Tree_Node'Class (Item.all).Body_Name);
+
    package Node_Vectors is
      new Ada.Containers.Vectors (Positive, Node_Access);
 
@@ -41,5 +49,13 @@ private package Syn.Trees is
 
    function Max_Defining_Width (Items : Node_Vectors.Vector) return Natural;
    --  The longest defining name in Items, for aligning them.
+
+   function Lines
+     (Items : Node_Vectors.Vector;
+      Style : Syn.Style.Settings)
+      return Syn.Documents.Document;
+   --  Items one per line, each preceded by a line break, with their
+   --  defining names aligned. For statements and the declarations of a
+   --  subprogram body or block.
 
 end Syn.Trees;
