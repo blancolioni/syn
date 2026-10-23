@@ -17,6 +17,7 @@ This version replaces [syn-legacy](https://github.com/blancolioni/syn-legacy). I
 
 - Parsing Ada, or reformatting existing source. Syn only generates.
 - Checking that the generated code is legal Ada. Syn checks the shape of the tree (a statement where a statement belongs), not name resolution or types.
+- Writing GNAT project files. syn-legacy could (`Syn.Projects`); tools that need project files write them themselves.
 
 ## Lessons from syn-legacy
 
@@ -84,7 +85,3 @@ The default style matches GNAT's own, so the output passes `-gnatyabcefhiklmnopr
 - **Golden files.** Each test builds a tree and compares the output with an expected file.
 - **Compile every expected file** with `gcc -c -gnats -gnatyabcefhiklmnoprst -gnatwe -gnat2022` as part of the test suite, so a layout bug is a test failure, not a surprise in a user's build.
 - **The Rose interfaces as a test case:** the generated `Rose.Interfaces` packages for the kernel target should match the output of today's IDL compiler, apart from layout.
-
-## Open questions
-
-- **Project files.** syn-legacy can write GNAT project files (`Syn.Projects`). Whether that belongs in Syn or in the tools that use it.
