@@ -299,9 +299,9 @@ package Syn.Factory is
       Item    : not null Node_Access;
       Context : Node_Array := No_Nodes)
       return not null Node_Access;
-   --  A compilation unit for Item, which must be a package or a package
-   --  body, with the context clauses Context. Raises Constraint_Error if
-   --  Item is neither.
+   --  A compilation unit for Item, with the context clauses Context. Item
+   --  must be a package, a package body, a subprogram declaration or a
+   --  subprogram body; Constraint_Error is raised if it is none of these.
 
 private
 
