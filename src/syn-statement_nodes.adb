@@ -109,6 +109,25 @@ package body Syn.Statement_Nodes is
    --------------
 
    overriding function Document
+     (Item  : For_Of_Loop_Node;
+      Style : Syn.Style.Settings;
+      Pad   : Natural)
+      return Syn.Documents.Document
+   is
+      pragma Unreferenced (Pad);
+   begin
+      return Text ("for " & To_String (Item.Name) & " of ")
+        & Syn.Trees.To_Document (Item.Container, Style)
+        & Text (" loop")
+        & Statements (Item.Statements, Style)
+        & Hard_Line & Text ("end loop;");
+   end Document;
+
+   --------------
+   -- Document --
+   --------------
+
+   overriding function Document
      (Item  : Null_Statement_Node;
       Style : Syn.Style.Settings;
       Pad   : Natural)

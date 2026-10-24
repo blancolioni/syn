@@ -158,6 +158,24 @@ package body Syn.Factory is
       return Self.New_Subprogram ("", Parameters, null, Name);
    end New_Access_Procedure_Type;
 
+   ----------------
+   -- New_Aspect --
+   ----------------
+
+   function New_Aspect
+     (Self       : in out Factory;
+      Name       : String;
+      Definition : Node_Access := null)
+      return not null Node_Access
+   is
+   begin
+      return Self.Add
+        (new Syn.Declaration_Nodes.Aspect_Node'
+           (Syn.Trees.Tree_Node with
+            Name       => +Name,
+            Definition => Definition));
+   end New_Aspect;
+
    --------------------
    -- New_Assignment --
    --------------------
@@ -326,6 +344,24 @@ package body Syn.Factory is
          Initial_Value => Default);
    end New_Component;
 
+   ----------------------
+   -- New_Derived_Type --
+   ----------------------
+
+   function New_Derived_Type
+     (Self   : in out Factory;
+      Name   : String;
+      Parent : not null Node_Access)
+      return not null Node_Access
+   is
+   begin
+      return Self.Add
+        (new Syn.Declaration_Nodes.Derived_Type_Node'
+           (Syn.Trees.Tree_Node with
+            Name   => +Name,
+            Parent => Parent));
+   end New_Derived_Type;
+
    --------------------------
    -- New_Enumeration_Type --
    --------------------------
@@ -362,6 +398,26 @@ package body Syn.Factory is
             Specification => Specification,
             Expression    => Expression));
    end New_Expression_Function;
+
+   ---------------------
+   -- New_For_Of_Loop --
+   ---------------------
+
+   function New_For_Of_Loop
+     (Self       : in out Factory;
+      Name       : String;
+      Container  : not null Node_Access;
+      Statements : Node_Array)
+      return not null Node_Access
+   is
+   begin
+      return Self.Add
+        (new Syn.Statement_Nodes.For_Of_Loop_Node'
+           (Syn.Trees.Tree_Node with
+            Name       => +Name,
+            Container  => Container,
+            Statements => Syn.Trees.To_Vector (Statements)));
+   end New_For_Of_Loop;
 
    ------------------
    -- New_Function --
@@ -455,7 +511,8 @@ package body Syn.Factory is
       Object_Type   : Node_Access := null;
       Initial_Value : Node_Access := null;
       Is_Constant   : Boolean := False;
-      Is_Aliased    : Boolean := False)
+      Is_Aliased    : Boolean := False;
+      Aspects       : Node_Array := No_Nodes)
       return not null Node_Access
    is
    begin
@@ -466,7 +523,8 @@ package body Syn.Factory is
             Object_Type   => Object_Type,
             Initial_Value => Initial_Value,
             Is_Constant   => Is_Constant,
-            Is_Aliased    => Is_Aliased));
+            Is_Aliased    => Is_Aliased,
+            Aspects       => Syn.Trees.To_Vector (Aspects)));
    end New_Object;
 
    -----------------
@@ -557,6 +615,26 @@ package body Syn.Factory is
    begin
       return Self.New_Subprogram (Name, Parameters, null);
    end New_Procedure;
+
+   --------------------
+   -- New_Range_Type --
+   --------------------
+
+   function New_Range_Type
+     (Self : in out Factory;
+      Name : String;
+      Low  : not null Node_Access;
+      High : not null Node_Access)
+      return not null Node_Access
+   is
+   begin
+      return Self.Add
+        (new Syn.Declaration_Nodes.Range_Type_Node'
+           (Syn.Trees.Tree_Node with
+            Name => +Name,
+            Low  => Low,
+            High => High));
+   end New_Range_Type;
 
    -------------
    -- New_Raw --

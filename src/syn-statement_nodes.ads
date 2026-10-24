@@ -1,8 +1,12 @@
+with Ada.Strings.Unbounded;
+
 with Syn.Documents;
 with Syn.Style;
 with Syn.Trees;
 
 private package Syn.Statement_Nodes is
+
+   use Ada.Strings.Unbounded;
 
    type Call_Statement_Node is new Syn.Trees.Tree_Node with record
       Call : Node_Access;
@@ -56,6 +60,18 @@ private package Syn.Statement_Nodes is
 
    overriding function Document
      (Item  : Block_Node;
+      Style : Syn.Style.Settings;
+      Pad   : Natural)
+      return Syn.Documents.Document;
+
+   type For_Of_Loop_Node is new Syn.Trees.Tree_Node with record
+      Name       : Unbounded_String;
+      Container  : Node_Access;
+      Statements : Syn.Trees.Node_Vectors.Vector;
+   end record;
+
+   overriding function Document
+     (Item  : For_Of_Loop_Node;
       Style : Syn.Style.Settings;
       Pad   : Natural)
       return Syn.Documents.Document;

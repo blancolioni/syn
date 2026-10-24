@@ -203,6 +203,14 @@ package body Syn.Declaration_Nodes is
                    Line & Syn.Trees.To_Document (Item.Initial_Value, Style));
       end if;
 
+      if not Item.Aspects.Is_Empty then
+         Result := Result
+           & Nest (Style.Continuation,
+                   Line & Text ("with ")
+                   & Group (Align (Join (Documents (Item.Aspects, Style, 0),
+                                         Text (",") & Line))));
+      end if;
+
       return Group (Result & Text (";"));
    end Document;
 
@@ -225,6 +233,68 @@ package body Syn.Declaration_Nodes is
                  & Align (Group (Join (Documents (Item.Literals, Style, 0),
                                        Text (",") & Line)))
                  & Text (");")));
+   end Document;
+
+   --------------
+   -- Document --
+   --------------
+
+   overriding function Document
+     (Item  : Aspect_Node;
+      Style : Syn.Style.Settings;
+      Pad   : Natural)
+      return Syn.Documents.Document
+   is
+      pragma Unreferenced (Pad);
+   begin
+      if Item.Definition = null then
+         return Text (To_String (Item.Name));
+      else
+         return Text (To_String (Item.Name) & " => ")
+           & Syn.Trees.To_Document (Item.Definition, Style);
+      end if;
+   end Document;
+
+   --------------
+   -- Document --
+   --------------
+
+   overriding function Document
+     (Item  : Range_Type_Node;
+      Style : Syn.Style.Settings;
+      Pad   : Natural)
+      return Syn.Documents.Document
+   is
+      pragma Unreferenced (Pad);
+   begin
+      return Group
+        (Text ("type " & To_String (Item.Name) & " is")
+         & Nest (Style.Continuation,
+                 Line & Text ("range ")
+                 & Syn.Trees.To_Document (Item.Low, Style)
+                 & Text (" .. ")
+                 & Syn.Trees.To_Document (Item.High, Style)
+                 & Text (";")));
+   end Document;
+
+   --------------
+   -- Document --
+   --------------
+
+   overriding function Document
+     (Item  : Derived_Type_Node;
+      Style : Syn.Style.Settings;
+      Pad   : Natural)
+      return Syn.Documents.Document
+   is
+      pragma Unreferenced (Pad);
+   begin
+      return Group
+        (Text ("type " & To_String (Item.Name) & " is")
+         & Nest (Style.Continuation,
+                 Line & Text ("new ")
+                 & Syn.Trees.To_Document (Item.Parent, Style)
+                 & Text (";")));
    end Document;
 
    --------------

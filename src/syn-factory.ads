@@ -113,6 +113,14 @@ package Syn.Factory is
       return not null Node_Access;
    --  A block statement, starting with "declare" if it has declarations.
 
+   function New_For_Of_Loop
+     (Self       : in out Factory;
+      Name       : String;
+      Container  : not null Node_Access;
+      Statements : Node_Array)
+      return not null Node_Access;
+   --  for Name of Container loop Statements end loop;
+
    function New_Null_Statement
      (Self : in out Factory)
       return not null Node_Access;
@@ -153,12 +161,20 @@ package Syn.Factory is
       Object_Type   : Node_Access := null;
       Initial_Value : Node_Access := null;
       Is_Constant   : Boolean := False;
-      Is_Aliased    : Boolean := False)
+      Is_Aliased    : Boolean := False;
+      Aspects       : Node_Array := No_Nodes)
       return not null Node_Access
      with Pre => Object_Type /= null
                  or else (Is_Constant and then Initial_Value /= null);
    --  An object or constant declaration. A constant without a type is a
-   --  named number.
+   --  named number. Aspects come from New_Aspect.
+
+   function New_Aspect
+     (Self       : in out Factory;
+      Name       : String;
+      Definition : Node_Access := null)
+      return not null Node_Access;
+   --  An aspect specification, such as Import or Address => X.
 
    function New_Component
      (Self           : in out Factory;
@@ -174,6 +190,21 @@ package Syn.Factory is
       Literals : Node_Array)
       return not null Node_Access
      with Pre => Literals'Length > 0;
+
+   function New_Range_Type
+     (Self : in out Factory;
+      Name : String;
+      Low  : not null Node_Access;
+      High : not null Node_Access)
+      return not null Node_Access;
+   --  type Name is range Low .. High;
+
+   function New_Derived_Type
+     (Self   : in out Factory;
+      Name   : String;
+      Parent : not null Node_Access)
+      return not null Node_Access;
+   --  type Name is new Parent;
 
    function New_Private_Type
      (Self : in out Factory;

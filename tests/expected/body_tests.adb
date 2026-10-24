@@ -21,6 +21,8 @@ package body Body_Tests is
    procedure Handle (Parameters : in out Rose.Invocation.Invocation_Record) is
       use Rose.Capabilities;
       Cap        : Capability;
+      Name       : String (1 .. Natural (Parameters.Buffer_Length))
+        with Import, Address => Parameters.Buffer_Address;
       Identifier : constant Rose.Objects.Capability_Identifier :=
         Parameters.Identifier;
    begin
@@ -71,6 +73,9 @@ package body Body_Tests is
         (Context,
          Set_Timer_Endpoint,
          Handle'Access);
+      for Cap of Caps loop
+         Rose.System_Calls.Send_Cap (Params, Cap);
+      end loop;
       Counter := Counter + 1;
    end Register;
 
