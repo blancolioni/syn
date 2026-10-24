@@ -90,6 +90,18 @@ procedure Syn_Tests is
                     [F.New_Use ("Rose.Capabilities"),
                      F.New_Object ("Cap", Name ("Capability")),
                      F.New_Object
+                       ("Name",
+                        Call ("String",
+                              [F.New_Binary
+                                 (F.New_Integer_Literal (1), "..",
+                                  Call
+                                    ("Natural",
+                                     [Name ("Parameters.Buffer_Length")]))]),
+                        Aspects =>
+                          [F.New_Aspect ("Import"),
+                           F.New_Aspect
+                             ("Address", Name ("Parameters.Buffer_Address"))]),
+                     F.New_Object
                        ("Identifier",
                         Name ("Rose.Objects.Capability_Identifier"),
                         Initial_Value => Name ("Parameters.Identifier"),
@@ -164,6 +176,11 @@ procedure Syn_Tests is
                         [Name ("Context"),
                          Name ("Set_Timer_Endpoint"),
                          F.New_Attribute (Name ("Handle"), "Access")]),
+                     F.New_For_Of_Loop
+                       ("Cap", Name ("Caps"),
+                        [Call_Statement
+                           ("Rose.System_Calls.Send_Cap",
+                            [Name ("Params"), Name ("Cap")])]),
                      F.New_Assignment
                        (Name ("Counter"),
                         F.New_Binary

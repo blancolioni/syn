@@ -59,6 +59,7 @@ private package Syn.Declaration_Nodes is
       Initial_Value : Node_Access;
       Is_Constant   : Boolean;
       Is_Aliased    : Boolean;
+      Aspects       : Syn.Trees.Node_Vectors.Vector;
    end record;
    --  An object, constant, named number or record component.
 
@@ -78,6 +79,18 @@ private package Syn.Declaration_Nodes is
 
    overriding function Document
      (Item  : Enumeration_Node;
+      Style : Syn.Style.Settings;
+      Pad   : Natural)
+      return Syn.Documents.Document;
+
+   type Aspect_Node is new Syn.Trees.Tree_Node with record
+      Name       : Unbounded_String;
+      Definition : Node_Access;
+   end record;
+   --  Name, or Name => Definition if Definition is not null.
+
+   overriding function Document
+     (Item  : Aspect_Node;
       Style : Syn.Style.Settings;
       Pad   : Natural)
       return Syn.Documents.Document;

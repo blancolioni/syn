@@ -158,6 +158,24 @@ package body Syn.Factory is
       return Self.New_Subprogram ("", Parameters, null, Name);
    end New_Access_Procedure_Type;
 
+   ----------------
+   -- New_Aspect --
+   ----------------
+
+   function New_Aspect
+     (Self       : in out Factory;
+      Name       : String;
+      Definition : Node_Access := null)
+      return not null Node_Access
+   is
+   begin
+      return Self.Add
+        (new Syn.Declaration_Nodes.Aspect_Node'
+           (Syn.Trees.Tree_Node with
+            Name       => +Name,
+            Definition => Definition));
+   end New_Aspect;
+
    --------------------
    -- New_Assignment --
    --------------------
@@ -381,6 +399,26 @@ package body Syn.Factory is
             Expression    => Expression));
    end New_Expression_Function;
 
+   ---------------------
+   -- New_For_Of_Loop --
+   ---------------------
+
+   function New_For_Of_Loop
+     (Self       : in out Factory;
+      Name       : String;
+      Container  : not null Node_Access;
+      Statements : Node_Array)
+      return not null Node_Access
+   is
+   begin
+      return Self.Add
+        (new Syn.Statement_Nodes.For_Of_Loop_Node'
+           (Syn.Trees.Tree_Node with
+            Name       => +Name,
+            Container  => Container,
+            Statements => Syn.Trees.To_Vector (Statements)));
+   end New_For_Of_Loop;
+
    ------------------
    -- New_Function --
    ------------------
@@ -473,7 +511,8 @@ package body Syn.Factory is
       Object_Type   : Node_Access := null;
       Initial_Value : Node_Access := null;
       Is_Constant   : Boolean := False;
-      Is_Aliased    : Boolean := False)
+      Is_Aliased    : Boolean := False;
+      Aspects       : Node_Array := No_Nodes)
       return not null Node_Access
    is
    begin
@@ -484,7 +523,8 @@ package body Syn.Factory is
             Object_Type   => Object_Type,
             Initial_Value => Initial_Value,
             Is_Constant   => Is_Constant,
-            Is_Aliased    => Is_Aliased));
+            Is_Aliased    => Is_Aliased,
+            Aspects       => Syn.Trees.To_Vector (Aspects)));
    end New_Object;
 
    -----------------
