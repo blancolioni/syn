@@ -78,6 +78,15 @@ procedure Syn_Tests is
                F.New_Object ("Params",
                              Name ("Rose.Invocation.Invocation_Record"),
                              Is_Aliased => True),
+               F.New_Object
+                 ("Summary", Name ("String"),
+                  Initial_Value =>
+                    F.New_Concatenation
+                      ([F.New_String_Literal
+                          ("Writes each argument to standard output, "),
+                        F.New_String_Literal ("separated by single spaces."),
+                        Name ("ASCII.LF")]),
+                  Is_Constant => True),
                Handle,
 
                F.New_Expression_Function
@@ -176,6 +185,13 @@ procedure Syn_Tests is
                         [Name ("Context"),
                          Name ("Set_Timer_Endpoint"),
                          F.New_Attribute (Name ("Handle"), "Access")]),
+                     Call_Statement
+                       ("Rose.Core.Echo",
+                        [F.New_Named
+                           ("New_Line",
+                            Call ("Rose.Command_Line.Launch.Boolean_Argument",
+                                  [Name ("Call"), F.New_Integer_Literal (0)])),
+                         F.New_Named ("Arguments", Name ("Arguments"))]),
                      F.New_For_Of_Loop
                        ("Cap", Name ("Caps"),
                         [Call_Statement

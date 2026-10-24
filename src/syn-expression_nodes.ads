@@ -66,6 +66,30 @@ private package Syn.Expression_Nodes is
       Pad   : Natural)
       return Syn.Documents.Document;
 
+   type Named_Node is new Syn.Trees.Tree_Node with record
+      Name  : Unbounded_String;
+      Value : Node_Access;
+   end record;
+   --  Name => Value, as in a named association.
+
+   overriding function Document
+     (Item  : Named_Node;
+      Style : Syn.Style.Settings;
+      Pad   : Natural)
+      return Syn.Documents.Document;
+
+   type Concatenation_Node is new Syn.Trees.Tree_Node with record
+      Parts : Syn.Trees.Node_Vectors.Vector;
+   end record;
+   --  Parts joined by "&". When they do not fit on one line, each part
+   --  after the first starts a line with "&".
+
+   overriding function Document
+     (Item  : Concatenation_Node;
+      Style : Syn.Style.Settings;
+      Pad   : Natural)
+      return Syn.Documents.Document;
+
    type Attribute_Node is new Syn.Trees.Tree_Node with record
       Prefix    : Node_Access;
       Attribute : Unbounded_String;

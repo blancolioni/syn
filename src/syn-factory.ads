@@ -65,6 +65,21 @@ package Syn.Factory is
       return not null Node_Access;
    --  Left Operator Right, such as X /= Y or A and then B.
 
+   function New_Named
+     (Self  : in out Factory;
+      Name  : String;
+      Value : not null Node_Access)
+      return not null Node_Access;
+   --  Name => Value, as in a named association in a call.
+
+   function New_Concatenation
+     (Self  : in out Factory;
+      Parts : Node_Array)
+      return not null Node_Access
+     with Pre => Parts'Length > 0;
+   --  Parts joined by "&", breaking before "&" when they do not fit on
+   --  one line.
+
    function New_Unary
      (Self     : in out Factory;
       Operator : String;
