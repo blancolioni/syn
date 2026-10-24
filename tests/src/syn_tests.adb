@@ -36,6 +36,8 @@ procedure Syn_Tests is
 
    function Body_Tests_Body return not null Node_Access;
    function Body_Tests_Spec return not null Node_Access;
+   function Command_Main return not null Node_Access;
+   function Command_Spec return not null Node_Access;
    function Layout_Tests return not null Node_Access;
    function Timer return not null Node_Access;
    function Timer_Client return not null Node_Access;
@@ -280,6 +282,53 @@ procedure Syn_Tests is
    end Check;
 
    ------------------
+   -- Command_Main --
+   ------------------
+
+   function Command_Main return not null Node_Access is
+      Launch_Call : constant not null Node_Access := Name ("Call");
+   begin
+      return F.New_Compilation_Unit
+        (Context =>
+           [F.New_With ("Rose.Command_Line.Launch"),
+            F.New_With ("Rose.Core.Echo")],
+         Item    =>
+           F.New_Subprogram_Body
+             (Specification => F.New_Procedure ("Rose.Core.Echo_Main"),
+              Declarations  =>
+                [F.New_Object
+                   ("Call", Name ("Rose.Command_Line.Launch.Launch_Call"))],
+              Statements    =>
+                [Call_Statement
+                   ("Rose.Command_Line.Launch.Receive", [Launch_Call]),
+                 Call_Statement
+                   ("Rose.Core.Echo",
+                    [F.New_Named
+                       ("New_Line",
+                        Call ("Rose.Command_Line.Launch.Boolean_Argument",
+                              [Launch_Call, F.New_Integer_Literal (0)]))]),
+                 Call_Statement
+                   ("Rose.Command_Line.Launch.Complete", [Launch_Call])]));
+   end Command_Main;
+
+   ------------------
+   -- Command_Spec --
+   ------------------
+
+   function Command_Spec return not null Node_Access is
+   begin
+      return F.New_Compilation_Unit
+        (Context => [F.New_With ("Rose.Command_Line")],
+         Item    =>
+           F.New_Procedure
+             ("Rose.Core.Echo",
+              [F.New_Parameter
+                 ("New_Line", Name ("Boolean"), Default => Name ("True")),
+               F.New_Parameter
+                 ("Arguments", Name ("Rose.Command_Line.String_List"))]));
+   end Command_Spec;
+
+   ------------------
    -- Layout_Tests --
    ------------------
 
@@ -446,6 +495,8 @@ begin
    Check (Layout_Tests);
    Check (Body_Tests_Spec);
    Check (Body_Tests_Body);
+   Check (Command_Spec);
+   Check (Command_Main);
 
    if Failures > 0 then
       Ada.Text_IO.Put_Line

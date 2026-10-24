@@ -312,9 +312,19 @@ package body Syn.Factory is
       elsif Item.all in Package_Body_Node'Class then
          Name := Package_Body_Node'Class (Item.all).Name;
          Is_Spec := False;
+      elsif Item.all in Subprogram_Node'Class
+        and then Subprogram_Node'Class (Item.all).Access_Type_Name
+                   = Null_Unbounded_String
+      then
+         Name := Subprogram_Node'Class (Item.all).Name;
+         Is_Spec := True;
+      elsif Item.all in Subprogram_Body_Node'Class then
+         Name := To_Unbounded_String (Syn.Trees.Body_Name (Item));
+         Is_Spec := False;
       else
          raise Constraint_Error with
-           "a compilation unit must contain a package or a package body";
+           "a compilation unit must contain a package, a subprogram,"
+           & " or the body of one";
       end if;
 
       return Self.Add
