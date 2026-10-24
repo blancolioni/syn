@@ -165,6 +165,47 @@ package body Syn.Expression_Nodes is
         & Text ("'" & To_String (Item.Attribute));
    end Document;
 
+   --------------
+   -- Document --
+   --------------
+
+   overriding function Document
+     (Item  : Named_Node;
+      Style : Syn.Style.Settings;
+      Pad   : Natural)
+      return Syn.Documents.Document
+   is
+      pragma Unreferenced (Pad);
+   begin
+      return Group
+        (Text (To_String (Item.Name) & " =>")
+         & Nest (Style.Continuation,
+                 Line & Syn.Trees.To_Document (Item.Value, Style)));
+   end Document;
+
+   --------------
+   -- Document --
+   --------------
+
+   overriding function Document
+     (Item  : Concatenation_Node;
+      Style : Syn.Style.Settings;
+      Pad   : Natural)
+      return Syn.Documents.Document
+   is
+      pragma Unreferenced (Pad);
+      Result : Syn.Documents.Document := Empty;
+   begin
+      for Part of Item.Parts loop
+         if Result /= Empty then
+            Result := Result & Line & Text ("& ");
+         end if;
+         Result := Result
+           & Operand (Part, Style, Level (Part) <= Adding_Level);
+      end loop;
+      return Group (Align (Result));
+   end Document;
+
    -----------
    -- Level --
    -----------
@@ -174,6 +215,8 @@ package body Syn.Expression_Nodes is
       if Item.all in Binary_Node'Class then
          return Operator_Level
            (To_String (Binary_Node'Class (Item.all).Operator));
+      elsif Item.all in Concatenation_Node'Class then
+         return Adding_Level;
       elsif Item.all in Unary_Node'Class then
          return (if To_String (Unary_Node'Class (Item.all).Operator)
                       in "-" | "+"

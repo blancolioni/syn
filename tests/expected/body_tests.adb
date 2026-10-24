@@ -6,6 +6,11 @@ package body Body_Tests is
 
    Params  : aliased Rose.Invocation.Invocation_Record;
 
+   Summary : constant String :=
+     "Writes each argument to standard output, "
+     & "separated by single spaces."
+     & ASCII.LF;
+
    procedure Handle (Parameters : in out Rose.Invocation.Invocation_Record);
 
    -----------
@@ -73,6 +78,9 @@ package body Body_Tests is
         (Context,
          Set_Timer_Endpoint,
          Handle'Access);
+      Rose.Core.Echo
+        (New_Line => Rose.Command_Line.Launch.Boolean_Argument (Call, 0),
+         Arguments => Arguments);
       for Cap of Caps loop
          Rose.System_Calls.Send_Cap (Params, Cap);
       end loop;

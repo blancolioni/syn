@@ -344,6 +344,22 @@ package body Syn.Factory is
          Initial_Value => Default);
    end New_Component;
 
+   -----------------------
+   -- New_Concatenation --
+   -----------------------
+
+   function New_Concatenation
+     (Self  : in out Factory;
+      Parts : Node_Array)
+      return not null Node_Access
+   is
+   begin
+      return Self.Add
+        (new Syn.Expression_Nodes.Concatenation_Node'
+           (Syn.Trees.Tree_Node with
+            Parts => Syn.Trees.To_Vector (Parts)));
+   end New_Concatenation;
+
    ----------------------
    -- New_Derived_Type --
    ----------------------
@@ -486,6 +502,24 @@ package body Syn.Factory is
         (new Syn.Expression_Nodes.Text_Node'
            (Syn.Trees.Tree_Node with Text => +Name));
    end New_Name;
+
+   ---------------
+   -- New_Named --
+   ---------------
+
+   function New_Named
+     (Self  : in out Factory;
+      Name  : String;
+      Value : not null Node_Access)
+      return not null Node_Access
+   is
+   begin
+      return Self.Add
+        (new Syn.Expression_Nodes.Named_Node'
+           (Syn.Trees.Tree_Node with
+            Name  => +Name,
+            Value => Value));
+   end New_Named;
 
    ------------------------
    -- New_Null_Statement --
