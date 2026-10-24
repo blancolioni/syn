@@ -82,6 +82,29 @@ private package Syn.Declaration_Nodes is
       Pad   : Natural)
       return Syn.Documents.Document;
 
+   type Range_Type_Node is new Syn.Trees.Tree_Node with record
+      Name : Unbounded_String;
+      Low  : Node_Access;
+      High : Node_Access;
+   end record;
+
+   overriding function Document
+     (Item  : Range_Type_Node;
+      Style : Syn.Style.Settings;
+      Pad   : Natural)
+      return Syn.Documents.Document;
+
+   type Derived_Type_Node is new Syn.Trees.Tree_Node with record
+      Name   : Unbounded_String;
+      Parent : Node_Access;
+   end record;
+
+   overriding function Document
+     (Item  : Derived_Type_Node;
+      Style : Syn.Style.Settings;
+      Pad   : Natural)
+      return Syn.Documents.Document;
+
    type Private_Type_Node is new Syn.Trees.Tree_Node with record
       Name : Unbounded_String;
    end record;

@@ -232,6 +232,48 @@ package body Syn.Declaration_Nodes is
    --------------
 
    overriding function Document
+     (Item  : Range_Type_Node;
+      Style : Syn.Style.Settings;
+      Pad   : Natural)
+      return Syn.Documents.Document
+   is
+      pragma Unreferenced (Pad);
+   begin
+      return Group
+        (Text ("type " & To_String (Item.Name) & " is")
+         & Nest (Style.Continuation,
+                 Line & Text ("range ")
+                 & Syn.Trees.To_Document (Item.Low, Style)
+                 & Text (" .. ")
+                 & Syn.Trees.To_Document (Item.High, Style)
+                 & Text (";")));
+   end Document;
+
+   --------------
+   -- Document --
+   --------------
+
+   overriding function Document
+     (Item  : Derived_Type_Node;
+      Style : Syn.Style.Settings;
+      Pad   : Natural)
+      return Syn.Documents.Document
+   is
+      pragma Unreferenced (Pad);
+   begin
+      return Group
+        (Text ("type " & To_String (Item.Name) & " is")
+         & Nest (Style.Continuation,
+                 Line & Text ("new ")
+                 & Syn.Trees.To_Document (Item.Parent, Style)
+                 & Text (";")));
+   end Document;
+
+   --------------
+   -- Document --
+   --------------
+
+   overriding function Document
      (Item  : Private_Type_Node;
       Style : Syn.Style.Settings;
       Pad   : Natural)

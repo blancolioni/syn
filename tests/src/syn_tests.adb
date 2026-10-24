@@ -189,7 +189,12 @@ procedure Syn_Tests is
          Item    =>
            F.New_Package
              ("Body_Tests",
-              [F.New_Access_Procedure_Type
+              [F.New_Range_Type
+                 ("Block_Size_Type",
+                  F.New_Integer_Literal (0), F.New_Integer_Literal (4096)),
+               F.New_Derived_Type
+                 ("Block_Address_Type", Name ("Rose.Words.Word_64")),
+               F.New_Access_Procedure_Type
                  ("Callback", [F.New_Parameter ("Code", Name ("Natural"))]),
                F.New_Access_Function_Type
                  ("Set_Timer_Handler",

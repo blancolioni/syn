@@ -326,6 +326,24 @@ package body Syn.Factory is
          Initial_Value => Default);
    end New_Component;
 
+   ----------------------
+   -- New_Derived_Type --
+   ----------------------
+
+   function New_Derived_Type
+     (Self   : in out Factory;
+      Name   : String;
+      Parent : not null Node_Access)
+      return not null Node_Access
+   is
+   begin
+      return Self.Add
+        (new Syn.Declaration_Nodes.Derived_Type_Node'
+           (Syn.Trees.Tree_Node with
+            Name   => +Name,
+            Parent => Parent));
+   end New_Derived_Type;
+
    --------------------------
    -- New_Enumeration_Type --
    --------------------------
@@ -557,6 +575,26 @@ package body Syn.Factory is
    begin
       return Self.New_Subprogram (Name, Parameters, null);
    end New_Procedure;
+
+   --------------------
+   -- New_Range_Type --
+   --------------------
+
+   function New_Range_Type
+     (Self : in out Factory;
+      Name : String;
+      Low  : not null Node_Access;
+      High : not null Node_Access)
+      return not null Node_Access
+   is
+   begin
+      return Self.Add
+        (new Syn.Declaration_Nodes.Range_Type_Node'
+           (Syn.Trees.Tree_Node with
+            Name => +Name,
+            Low  => Low,
+            High => High));
+   end New_Range_Type;
 
    -------------
    -- New_Raw --

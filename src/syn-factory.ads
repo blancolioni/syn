@@ -175,6 +175,21 @@ package Syn.Factory is
       return not null Node_Access
      with Pre => Literals'Length > 0;
 
+   function New_Range_Type
+     (Self : in out Factory;
+      Name : String;
+      Low  : not null Node_Access;
+      High : not null Node_Access)
+      return not null Node_Access;
+   --  type Name is range Low .. High;
+
+   function New_Derived_Type
+     (Self   : in out Factory;
+      Name   : String;
+      Parent : not null Node_Access)
+      return not null Node_Access;
+   --  type Name is new Parent;
+
    function New_Private_Type
      (Self : in out Factory;
       Name : String)

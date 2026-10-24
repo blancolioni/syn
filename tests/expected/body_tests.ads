@@ -6,6 +6,10 @@ with Rose.Words;
 
 package Body_Tests is
 
+   type Block_Size_Type is range 0 .. 4096;
+
+   type Block_Address_Type is new Rose.Words.Word_64;
+
    type Callback is access procedure (Code : Natural);
 
    type Set_Timer_Handler is access function
