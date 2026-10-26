@@ -37,9 +37,69 @@ package body Syn.Expression_Nodes is
       Pad   : Natural)
       return Syn.Documents.Document
    is
-      pragma Unreferenced (Style, Pad);
+      pragma Unreferenced (Pad);
+      Source : constant String := To_String (Item.Text);
+      Result : Syn.Documents.Document := Syn.Documents.Empty;
+      Start  : Positive := Source'First;
+
+      function Is_Dotted_Name return Boolean;
+      --  True if Source is an identifier or a name of identifiers
+      --  separated by dots, and not a literal.
+
+      --------------------
+      -- Is_Dotted_Name --
+      --------------------
+
+      function Is_Dotted_Name return Boolean is
+      begin
+         if Source'Length = 0
+           or else Source (Source'First) not in 'A' .. 'Z' | 'a' .. 'z'
+         then
+            return False;
+         end if;
+
+         for Ch of Source loop
+            if Ch not in 'A' .. 'Z' | 'a' .. 'z' | '0' .. '9' | '_' | '.'
+            then
+               return False;
+            end if;
+         end loop;
+         return True;
+      end Is_Dotted_Name;
+
    begin
-      return Text (To_String (Item.Text));
+      if not Is_Dotted_Name then
+         return Text (Source);
+      end if;
+
+      --  A dotted name can break before each dot. The groups nest to the
+      --  left, so the outermost group holds the last dot: a name that
+      --  doesn't fit breaks before its last selector first, and before
+      --  earlier ones only if it still doesn't fit.
+
+      for Index in Source'Range loop
+         if Source (Index) = '.' then
+            if Result = Syn.Documents.Empty then
+               Result := Text (Source (Start .. Index - 1));
+            else
+               Result :=
+                 Group
+                   (Result
+                    & Nest (Style.Continuation,
+                            Soft_Line & Text (Source (Start .. Index - 1))));
+            end if;
+            Start := Index;
+         end if;
+      end loop;
+
+      if Result = Syn.Documents.Empty then
+         return Text (Source);
+      end if;
+
+      return Group
+        (Result
+         & Nest (Style.Continuation,
+                 Soft_Line & Text (Source (Start .. Source'Last))));
    end Document;
 
    --------------
