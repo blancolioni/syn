@@ -34,4 +34,11 @@ package Layout_Tests is
       Block_Size  : Positive := 512;
       Device      : in out Device_Type);
 
+   function Home_Directory
+      return Rose.Interfaces.Writable_Directory.Client
+        .Writable_Directory_Client;
+
+   Home     : Rose.Interfaces.Writable_Directory.Client
+     .Writable_Directory_Client;
+
 end Layout_Tests;

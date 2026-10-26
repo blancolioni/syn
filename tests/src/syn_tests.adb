@@ -381,7 +381,16 @@ procedure Syn_Tests is
                       Default => F.New_Integer_Literal (512)),
                    F.New_Parameter
                      ("Device", Name ("Device_Type"),
-                      Mode => In_Out_Mode)])]));
+                      Mode => In_Out_Mode)]),
+               F.New_Function
+                 ("Home_Directory",
+                  Name ("Rose.Interfaces.Writable_Directory.Client"
+                        & ".Writable_Directory_Client")),
+               F.New_Object
+                 (Name        => "Home",
+                  Object_Type =>
+                    Name ("Rose.Interfaces.Writable_Directory.Client"
+                          & ".Writable_Directory_Client"))]));
    end Layout_Tests;
 
    ---------------
