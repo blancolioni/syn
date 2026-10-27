@@ -24,6 +24,11 @@ package body Tagged_Tests is
          raise Rose.Interfaces.Objects.Invocation_Error
            with "Stream_Writer.Write: the server replied with an error";
       end if;
+      if Value > Rose.Interfaces.Objects.Highest_Value_For_The_Test
+        and then Value /= Rose.Interfaces.Objects.Another_Long_Value_Name
+      then
+         raise Constraint_Error;
+      end if;
    end Check;
 
    ---------------

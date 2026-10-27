@@ -177,14 +177,26 @@ package body Syn.Expression_Nodes is
       --  Ada does not allow different logical operators to be mixed
       --  without parentheses, as in A and B or C.
 
-   begin
+      Left  : constant Syn.Documents.Document :=
+                Operand
+                  (Item.Left, Style,
+                   Level (Item.Left) < Own or else Mixed_Logical (Item.Left));
+      Right : constant Syn.Documents.Document :=
+                Operand (Item.Right, Style, Level (Item.Right) <= Own);
       --  Operators are left associative, so a left operand at the same
       --  level needs no parentheses, but a right operand does.
-      return Operand
-               (Item.Left, Style,
-                Level (Item.Left) < Own or else Mixed_Logical (Item.Left))
-        & Text (" " & Operator & " ")
-        & Operand (Item.Right, Style, Level (Item.Right) <= Own);
+
+   begin
+      if Own = Logical_Level then
+         --  A logical expression that does not fit breaks before the
+         --  operator, which is indented.
+         return Group
+           (Left
+            & Nest (Style.Continuation,
+                    Line & Text (Operator & " ") & Right));
+      else
+         return Left & Text (" " & Operator & " ") & Right;
+      end if;
    end Document;
 
    --------------

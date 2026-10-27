@@ -496,8 +496,12 @@ package body Syn.Declaration_Nodes is
       --  A type that does not fit after the mode goes on the next line.
    begin
       if Item.Default /= null then
-         Result := Result & Text (" := ")
-           & Syn.Trees.To_Document (Item.Default, Style);
+         --  A default that does not fit after the type goes on the next
+         --  line.
+         Result := Result & Text (" :=")
+           & Group (Nest (Style.Continuation,
+                          Line
+                          & Syn.Trees.To_Document (Item.Default, Style)));
       end if;
       return Result;
    end Document;

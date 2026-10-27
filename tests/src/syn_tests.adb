@@ -454,7 +454,20 @@ procedure Syn_Tests is
                                     & ".Invocation_Error"),
                               F.New_String_Literal
                                 ("Stream_Writer.Write: the server replied "
-                                 & "with an error"))])]),
+                                 & "with an error"))]),
+                     F.New_If
+                       (F.New_Binary
+                          (F.New_Binary
+                             (Name ("Value"), ">",
+                              Name ("Rose.Interfaces.Objects"
+                                    & ".Highest_Value_For_The_Test")),
+                           "and then",
+                           F.New_Binary
+                             (Name ("Value"), "/=",
+                              Name ("Rose.Interfaces.Objects"
+                                    & ".Another_Long_Value_Name"))),
+                        Then_Part =>
+                          [F.New_Raise (Name ("Constraint_Error"))])]),
 
                F.New_Expression_Function
                  (F.New_Function
@@ -520,6 +533,16 @@ procedure Syn_Tests is
                        ("Window", Name ("Rose.Interfaces.Window.Window_Object"
                                         & "'Class"),
                         Mode => In_Out_Mode)],
+                    Is_Abstract => True),
+                 F.New_Function
+                   ("Shape_Cap", Cap,
+                    [F.New_Parameter
+                       ("Item", Name ("Shape"), Mode => In_Out_Mode),
+                     F.New_Parameter
+                       ("Interface_Id", Name ("Rose.Objects.Endpoint_Id"),
+                        Default =>
+                          Name ("Rose.Interfaces.Stream_Writer"
+                                & ".Stream_Writer_Interface"))],
                     Is_Abstract => True),
                  F.New_Interface_Type
                    ("Labelled", [Name ("Shape")], Is_Limited => True),

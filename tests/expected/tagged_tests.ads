@@ -23,6 +23,12 @@ package Tagged_Tests is
       Window : in out Rose.Interfaces.Window.Window_Object'Class)
       return Rose.Capabilities.Capability is abstract;
 
+   function Shape_Cap
+     (Item         : in out Shape;
+      Interface_Id : Rose.Objects.Endpoint_Id :=
+        Rose.Interfaces.Stream_Writer.Stream_Writer_Interface)
+      return Rose.Capabilities.Capability is abstract;
+
    type Labelled is limited interface and Shape;
 
    type Stream_Writer_Interface is limited interface
