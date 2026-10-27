@@ -2,6 +2,7 @@ with Rose.Capabilities;
 with Rose.Interfaces.Restorable;
 with Rose.Interfaces.Stream_Writer;
 with Rose.Objects;
+limited with Rose.Interfaces.File;
 
 package Tagged_Tests is
 
