@@ -12,6 +12,17 @@ package Tagged_Tests is
 
    procedure Scale (Item : in out Shape; Factor : Positive) is abstract;
 
+   procedure Listen
+     (Item     : in out Shape;
+      Listener : in out
+        Rose.Interfaces.Event_Listener.Event_Listener_Object'Class)
+   is abstract;
+
+   function Window_Cap
+     (Item   : in out Shape;
+      Window : in out Rose.Interfaces.Window.Window_Object'Class)
+      return Rose.Capabilities.Capability is abstract;
+
    type Labelled is limited interface and Shape;
 
    type Stream_Writer_Interface is limited interface

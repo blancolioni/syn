@@ -480,11 +480,20 @@ package body Syn.Declaration_Nodes is
       return Syn.Documents.Document
    is
       Name   : constant String := To_String (Item.Name);
+      Mode   : constant String := Mode_Text (Item.Mode);
       Result : Syn.Documents.Document :=
                  Text (Name)
                  & If_Flat (Empty, Padding (Name, Pad))
-                 & Text (" : " & Mode_Text (Item.Mode))
-                 & Syn.Trees.To_Document (Item.Parameter_Type, Style);
+                 & Text (" :"
+                         & (if Mode = ""
+                            then ""
+                            else " " & Mode (Mode'First .. Mode'Last - 1)))
+                 & Group
+                     (Nest (Style.Continuation,
+                            Line
+                            & Syn.Trees.To_Document
+                                (Item.Parameter_Type, Style)));
+      --  A type that does not fit after the mode goes on the next line.
    begin
       if Item.Default /= null then
          Result := Result & Text (" := ")
@@ -505,9 +514,15 @@ package body Syn.Declaration_Nodes is
    is
       pragma Unreferenced (Pad);
    begin
-      return Group
-        (Profile (Item, Style)
-         & Text ((if Item.Is_Abstract then " is abstract;" else ";")));
+      if Item.Is_Abstract then
+         --  "is abstract" goes on a line of its own if it does not fit
+         --  after the profile.
+         return Group
+           (Profile (Item, Style)
+            & Group (Line & Text ("is abstract;")));
+      else
+         return Group (Profile (Item, Style) & Text (";"));
+      end if;
    end Document;
 
    --------------

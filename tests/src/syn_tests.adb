@@ -502,6 +502,25 @@ procedure Syn_Tests is
                        ("Item", Name ("Shape"), Mode => In_Out_Mode),
                      F.New_Parameter ("Factor", Name ("Positive"))],
                     Is_Abstract => True),
+                 F.New_Procedure
+                   ("Listen",
+                    [F.New_Parameter
+                       ("Item", Name ("Shape"), Mode => In_Out_Mode),
+                     F.New_Parameter
+                       ("Listener",
+                        Name ("Rose.Interfaces.Event_Listener"
+                              & ".Event_Listener_Object'Class"),
+                        Mode => In_Out_Mode)],
+                    Is_Abstract => True),
+                 F.New_Function
+                   ("Window_Cap", Cap,
+                    [F.New_Parameter
+                       ("Item", Name ("Shape"), Mode => In_Out_Mode),
+                     F.New_Parameter
+                       ("Window", Name ("Rose.Interfaces.Window.Window_Object"
+                                        & "'Class"),
+                        Mode => In_Out_Mode)],
+                    Is_Abstract => True),
                  F.New_Interface_Type
                    ("Labelled", [Name ("Shape")], Is_Limited => True),
                  F.New_Interface_Type
