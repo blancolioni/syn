@@ -485,7 +485,8 @@ procedure Syn_Tests is
            [F.New_With ("Rose.Capabilities"),
             F.New_With ("Rose.Interfaces.Restorable"),
             F.New_With ("Rose.Interfaces.Stream_Writer"),
-            F.New_With ("Rose.Objects")],
+            F.New_With ("Rose.Objects"),
+            F.New_With ("Rose.Interfaces.File", Is_Limited => True)],
          Item    =>
            F.New_Package
              (Name         => "Tagged_Tests",

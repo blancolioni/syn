@@ -150,9 +150,11 @@ package Syn.Factory is
    --  Declarations
 
    function New_With
-     (Self      : in out Factory;
-      Unit_Name : String)
+     (Self       : in out Factory;
+      Unit_Name  : String;
+      Is_Limited : Boolean := False)
       return not null Node_Access;
+   --  A with clause, or a limited with clause if Is_Limited is True.
 
    function New_Use
      (Self     : in out Factory;

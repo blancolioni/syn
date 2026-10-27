@@ -97,7 +97,9 @@ package body Syn.Declaration_Nodes is
    is
       pragma Unreferenced (Style, Pad);
    begin
-      return Text ("with " & To_String (Item.Unit_Name) & ";");
+      return Text
+        ((if Item.Is_Limited then "limited " else "")
+         & "with " & To_String (Item.Unit_Name) & ";");
    end Document;
 
    --------------

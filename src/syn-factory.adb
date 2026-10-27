@@ -1009,14 +1009,17 @@ package body Syn.Factory is
    --------------
 
    function New_With
-     (Self      : in out Factory;
-      Unit_Name : String)
+     (Self       : in out Factory;
+      Unit_Name  : String;
+      Is_Limited : Boolean := False)
       return not null Node_Access
    is
    begin
       return Self.Add
         (new Syn.Declaration_Nodes.With_Node'
-           (Syn.Trees.Tree_Node with Unit_Name => +Unit_Name));
+           (Syn.Trees.Tree_Node with
+              Unit_Name  => +Unit_Name,
+              Is_Limited => Is_Limited));
    end New_With;
 
 end Syn.Factory;

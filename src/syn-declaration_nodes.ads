@@ -9,8 +9,10 @@ private package Syn.Declaration_Nodes is
    use Ada.Strings.Unbounded;
 
    type With_Node is new Syn.Trees.Tree_Node with record
-      Unit_Name : Unbounded_String;
+      Unit_Name  : Unbounded_String;
+      Is_Limited : Boolean;
    end record;
+   --  "with Unit_Name;", or "limited with Unit_Name;" if Is_Limited.
 
    overriding function Document
      (Item  : With_Node;
