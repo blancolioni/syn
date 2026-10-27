@@ -39,6 +39,8 @@ procedure Syn_Tests is
    function Command_Main return not null Node_Access;
    function Command_Spec return not null Node_Access;
    function Layout_Tests return not null Node_Access;
+   function Tagged_Tests_Body return not null Node_Access;
+   function Tagged_Tests_Spec return not null Node_Access;
    function Timer return not null Node_Access;
    function Timer_Client return not null Node_Access;
 
@@ -411,6 +413,145 @@ procedure Syn_Tests is
       end;
    end Read_File;
 
+   -----------------------
+   -- Tagged_Tests_Body --
+   -----------------------
+
+   function Tagged_Tests_Body return not null Node_Access is
+      Square_Item : constant not null Node_Access :=
+                      F.New_Parameter ("Item", Name ("Square"));
+   begin
+      return F.New_Compilation_Unit
+        (Context => [F.New_With ("Rose.Interfaces.Objects")],
+         Item    =>
+           F.New_Package_Body
+             ("Tagged_Tests",
+              [F.New_Subprogram_Body
+                 (F.New_Function
+                    ("Area", Name ("Natural"), [Square_Item],
+                     Indicator => Is_Overriding),
+                  Statements =>
+                    [F.New_If
+                       (F.New_Binary
+                          (Name ("Item.Side"), "=",
+                           F.New_Integer_Literal (0)),
+                        Then_Part =>
+                          [F.New_Raise (Name ("Constraint_Error"))]),
+                     F.New_Return
+                       (F.New_Binary
+                          (Name ("Item.Side"), "*", Name ("Item.Side")))]),
+
+               F.New_Subprogram_Body
+                 (F.New_Procedure
+                    ("Check", [F.New_Parameter ("Value", Name ("Natural"))]),
+                  Statements =>
+                    [F.New_If
+                       (F.New_Binary
+                          (Name ("Value"), ">", F.New_Integer_Literal (100)),
+                        Then_Part =>
+                          [F.New_Raise
+                             (Name ("Rose.Interfaces.Objects"
+                                    & ".Invocation_Error"),
+                              F.New_String_Literal
+                                ("Stream_Writer.Write: the server replied "
+                                 & "with an error"))])]),
+
+               F.New_Expression_Function
+                 (F.New_Function
+                    ("Perimeter", Name ("Natural"), [Square_Item],
+                     Indicator => Is_Not_Overriding),
+                  F.New_Binary
+                    (F.New_Integer_Literal (4), "*", Name ("Item.Side")))]));
+   end Tagged_Tests_Body;
+
+   -----------------------
+   -- Tagged_Tests_Spec --
+   -----------------------
+
+   function Tagged_Tests_Spec return not null Node_Access is
+      Cap        : constant not null Node_Access :=
+                     Name ("Rose.Capabilities.Capability");
+      Null_Cap   : constant not null Node_Access :=
+                     Name ("Rose.Capabilities.Null_Capability");
+      Writer     : constant not null Node_Access :=
+                     Name ("Rose.Interfaces.Stream_Writer"
+                           & ".Stream_Writer_Object");
+      Restorable : constant not null Node_Access :=
+                     Name ("Rose.Interfaces.Restorable.Restorable_Object");
+      Client     : constant String := "Stream_Writer_Client";
+   begin
+      return F.New_Compilation_Unit
+        (Context =>
+           [F.New_With ("Rose.Capabilities"),
+            F.New_With ("Rose.Interfaces.Restorable"),
+            F.New_With ("Rose.Interfaces.Stream_Writer"),
+            F.New_With ("Rose.Objects")],
+         Item    =>
+           F.New_Package
+             (Name         => "Tagged_Tests",
+              Public_Part  =>
+                [F.New_Interface_Type ("Shape", Is_Limited => True),
+                 F.New_Function
+                   ("Area", Name ("Natural"),
+                    [F.New_Parameter ("Item", Name ("Shape"))],
+                    Is_Abstract => True),
+                 F.New_Procedure
+                   ("Scale",
+                    [F.New_Parameter
+                       ("Item", Name ("Shape"), Mode => In_Out_Mode),
+                     F.New_Parameter ("Factor", Name ("Positive"))],
+                    Is_Abstract => True),
+                 F.New_Interface_Type
+                   ("Labelled", [Name ("Shape")], Is_Limited => True),
+                 F.New_Interface_Type
+                   ("Stream_Writer_Interface", [Writer, Restorable],
+                    Is_Limited => True),
+                 F.New_Private_Extension ("Square", Name ("Shape")),
+                 F.New_Private_Extension
+                   (Client, Writer, [Restorable], Is_Limited => True),
+                 F.New_Function
+                   ("Area", Name ("Natural"),
+                    [F.New_Parameter ("Item", Name ("Square"))],
+                    Indicator => Is_Overriding),
+                 F.New_Function
+                   ("Perimeter", Name ("Natural"),
+                    [F.New_Parameter ("Item", Name ("Square"))],
+                    Indicator => Is_Not_Overriding),
+                 F.New_Procedure
+                   ("Check", [F.New_Parameter ("Value", Name ("Natural"))]),
+                 F.New_Access_Type
+                   ("Shape_Access", Name ("Shape'Class"), Is_All => True),
+                 F.New_Access_Type
+                   ("Shape_Reference", Name ("Shape'Class"),
+                    Is_Constant => True),
+                 F.New_Access_Type ("Square_Pointer", Name ("Square")),
+                 F.New_Array_Type
+                   ("Shape_Table",
+                    F.New_Binary
+                      (F.New_Integer_Literal (0), "..",
+                       F.New_Integer_Literal (15)),
+                    Name ("Shape_Access")),
+                 F.New_Array_Type
+                   ("Writer_Table",
+                    Name ("Rose.Objects.Capability_Identifier"),
+                    Name ("Rose.Interfaces.Stream_Writer.Stream_Writer_Object"
+                          & "_Access"))],
+              Private_Part =>
+                [F.New_Record_Extension
+                   ("Square", Name ("Shape"),
+                    Components =>
+                      [F.New_Component
+                         ("Side", Name ("Natural"),
+                          F.New_Integer_Literal (0))]),
+                 F.New_Record_Extension
+                   (Client, Writer, [Restorable],
+                    Components =>
+                      [F.New_Component ("Interface_Cap", Cap, Null_Cap),
+                       F.New_Component ("Write", Cap, Null_Cap)],
+                    Is_Limited => True),
+                 F.New_Record_Extension ("Marker", Name ("Shape"))]));
+   end Tagged_Tests_Spec;
+
    -----------
    -- Timer --
    -----------
@@ -506,6 +647,8 @@ begin
    Check (Body_Tests_Body);
    Check (Command_Spec);
    Check (Command_Main);
+   Check (Tagged_Tests_Spec);
+   Check (Tagged_Tests_Body);
 
    if Failures > 0 then
       Ada.Text_IO.Put_Line

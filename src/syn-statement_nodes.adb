@@ -87,6 +87,30 @@ package body Syn.Statement_Nodes is
    --------------
 
    overriding function Document
+     (Item  : Raise_Node;
+      Style : Syn.Style.Settings;
+      Pad   : Natural)
+      return Syn.Documents.Document
+   is
+      pragma Unreferenced (Pad);
+      Result : Syn.Documents.Document :=
+                 Text ("raise ")
+                 & Syn.Trees.To_Document (Item.Exception_Name, Style);
+   begin
+      if Item.Message /= null then
+         Result := Result
+           & Nest (Style.Continuation,
+                   Line & Text ("with ")
+                   & Syn.Trees.To_Document (Item.Message, Style));
+      end if;
+      return Group (Result & Text (";"));
+   end Document;
+
+   --------------
+   -- Document --
+   --------------
+
+   overriding function Document
      (Item  : Block_Node;
       Style : Syn.Style.Settings;
       Pad   : Natural)

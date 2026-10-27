@@ -121,6 +121,13 @@ package Syn.Factory is
       return not null Node_Access;
    --  A return statement, with Value if it is not null.
 
+   function New_Raise
+     (Self           : in out Factory;
+      Exception_Name : not null Node_Access;
+      Message        : Node_Access := null)
+      return not null Node_Access;
+   --  raise Exception_Name [with Message];
+
    function New_Block
      (Self         : in out Factory;
       Declarations : Node_Array := No_Nodes;
@@ -233,6 +240,54 @@ package Syn.Factory is
       return not null Node_Access;
    --  A record type. With no components, it is a null record.
 
+   function New_Interface_Type
+     (Self       : in out Factory;
+      Name       : String;
+      Parents    : Node_Array := No_Nodes;
+      Is_Limited : Boolean := False)
+      return not null Node_Access;
+   --  type Name is [limited] interface [and Parent ...];
+
+   function New_Private_Extension
+     (Self       : in out Factory;
+      Name       : String;
+      Parent     : not null Node_Access;
+      Interfaces : Node_Array := No_Nodes;
+      Is_Limited : Boolean := False)
+      return not null Node_Access;
+   --  type Name is [limited] new Parent [and Interface ...] with private;
+
+   function New_Record_Extension
+     (Self       : in out Factory;
+      Name       : String;
+      Parent     : not null Node_Access;
+      Interfaces : Node_Array := No_Nodes;
+      Components : Node_Array := No_Nodes;
+      Is_Limited : Boolean := False)
+      return not null Node_Access;
+   --  type Name is [limited] new Parent [and Interface ...] with record
+   --  Components end record; or with null record if there are none.
+
+   function New_Access_Type
+     (Self        : in out Factory;
+      Name        : String;
+      Designated  : not null Node_Access;
+      Is_All      : Boolean := False;
+      Is_Constant : Boolean := False)
+      return not null Node_Access
+     with Pre => not (Is_All and then Is_Constant);
+   --  type Name is access [all | constant] Designated; Designated can
+   --  be a class-wide name, such as F.New_Name ("Shape'Class").
+
+   function New_Array_Type
+     (Self      : in out Factory;
+      Name      : String;
+      Index     : not null Node_Access;
+      Component : not null Node_Access)
+      return not null Node_Access;
+   --  type Name is array (Index) of Component; Index is a subtype name
+   --  or a range, such as F.New_Binary (Low, "..", High).
+
    function New_Parameter
      (Self           : in out Factory;
       Name           : String;
@@ -242,21 +297,27 @@ package Syn.Factory is
       return not null Node_Access;
 
    function New_Procedure
-     (Self       : in out Factory;
-      Name       : String;
-      Parameters : Node_Array := No_Nodes)
+     (Self        : in out Factory;
+      Name        : String;
+      Parameters  : Node_Array := No_Nodes;
+      Indicator   : Overriding_Kind := No_Indicator;
+      Is_Abstract : Boolean := False)
       return not null Node_Access;
-   --  A procedure declaration. It can also be the specification of a
-   --  procedure body.
+   --  A procedure declaration, with Indicator before it, and "is
+   --  abstract" if Is_Abstract. One that is not abstract can also be the
+   --  specification of a procedure body, which repeats the indicator.
 
    function New_Function
      (Self        : in out Factory;
       Name        : String;
       Result_Type : not null Node_Access;
-      Parameters  : Node_Array := No_Nodes)
+      Parameters  : Node_Array := No_Nodes;
+      Indicator   : Overriding_Kind := No_Indicator;
+      Is_Abstract : Boolean := False)
       return not null Node_Access;
-   --  A function declaration. It can also be the specification of a
-   --  function body or an expression function.
+   --  A function declaration, as for New_Procedure. One that is not
+   --  abstract can also be the specification of a function body or an
+   --  expression function.
 
    function New_Access_Procedure_Type
      (Self       : in out Factory;
@@ -282,7 +343,7 @@ package Syn.Factory is
    --  The body of the subprogram declared by Specification, which must
    --  come from New_Procedure or New_Function. With no statements, the
    --  body is "null;". Raises Constraint_Error if Specification is not a
-   --  subprogram declaration.
+   --  subprogram declaration, or is abstract.
 
    function New_Expression_Function
      (Self          : in out Factory;
@@ -290,7 +351,8 @@ package Syn.Factory is
       Expression    : not null Node_Access)
       return not null Node_Access;
    --  function ... is (Expression); Specification must come from
-   --  New_Function. Raises Constraint_Error if it does not.
+   --  New_Function, and not be abstract. Raises Constraint_Error if it
+   --  does not.
 
    --  Compilation units
 
