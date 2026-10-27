@@ -32,14 +32,27 @@ package body Syn.Factory is
       Name        : String;
       Parameters  : Node_Array;
       Result_Type : Node_Access;
-      Access_Name : String := "")
+      Access_Name : String := "";
+      Indicator   : Overriding_Kind := No_Indicator;
+      Is_Abstract : Boolean := False)
+      return not null Node_Access;
+
+   function New_Extension
+     (Self       : in out Factory;
+      Name       : String;
+      Kind       : Syn.Declaration_Nodes.Extension_Kind;
+      Parent     : not null Node_Access;
+      Interfaces : Node_Array;
+      Components : Node_Array;
+      Is_Limited : Boolean)
       return not null Node_Access;
 
    procedure Check_Specification
      (Item          : not null Node_Access;
       Function_Only : Boolean);
    --  Raise Constraint_Error unless Item is a subprogram declaration (a
-   --  function declaration, if Function_Only), and not an access type.
+   --  function declaration, if Function_Only) that can have a body: not
+   --  an access type, and not abstract.
 
    ---------
    -- Add --
@@ -73,6 +86,8 @@ package body Syn.Factory is
         and then Subprogram_Node'Class (Item.all).Result_Type = null
       then
          raise Constraint_Error with "not a function declaration";
+      elsif Subprogram_Node'Class (Item.all).Is_Abstract then
+         raise Constraint_Error with "an abstract subprogram has no body";
       end if;
    end Check_Specification;
 
@@ -157,6 +172,51 @@ package body Syn.Factory is
    begin
       return Self.New_Subprogram ("", Parameters, null, Name);
    end New_Access_Procedure_Type;
+
+   ---------------------
+   -- New_Access_Type --
+   ---------------------
+
+   function New_Access_Type
+     (Self        : in out Factory;
+      Name        : String;
+      Designated  : not null Node_Access;
+      Is_All      : Boolean := False;
+      Is_Constant : Boolean := False)
+      return not null Node_Access
+   is
+      use Syn.Declaration_Nodes;
+   begin
+      return Self.Add
+        (new Access_Type_Node'
+           (Syn.Trees.Tree_Node with
+            Name       => +Name,
+            Kind       =>
+              (if Is_All then All_Access
+               elsif Is_Constant then Constant_Access
+               else Pool_Access),
+            Designated => Designated));
+   end New_Access_Type;
+
+   --------------------
+   -- New_Array_Type --
+   --------------------
+
+   function New_Array_Type
+     (Self      : in out Factory;
+      Name      : String;
+      Index     : not null Node_Access;
+      Component : not null Node_Access)
+      return not null Node_Access
+   is
+   begin
+      return Self.Add
+        (new Syn.Declaration_Nodes.Array_Type_Node'
+           (Syn.Trees.Tree_Node with
+            Name      => +Name,
+            Index     => Index,
+            Component => Component));
+   end New_Array_Type;
 
    ----------------
    -- New_Aspect --
@@ -425,6 +485,32 @@ package body Syn.Factory is
             Expression    => Expression));
    end New_Expression_Function;
 
+   -------------------
+   -- New_Extension --
+   -------------------
+
+   function New_Extension
+     (Self       : in out Factory;
+      Name       : String;
+      Kind       : Syn.Declaration_Nodes.Extension_Kind;
+      Parent     : not null Node_Access;
+      Interfaces : Node_Array;
+      Components : Node_Array;
+      Is_Limited : Boolean)
+      return not null Node_Access
+   is
+   begin
+      return Self.Add
+        (new Syn.Declaration_Nodes.Extension_Node'
+           (Syn.Trees.Tree_Node with
+            Name       => +Name,
+            Kind       => Kind,
+            Parent     => Parent,
+            Interfaces => Syn.Trees.To_Vector (Interfaces),
+            Components => Syn.Trees.To_Vector (Components),
+            Is_Limited => Is_Limited));
+   end New_Extension;
+
    ---------------------
    -- New_For_Of_Loop --
    ---------------------
@@ -453,11 +539,16 @@ package body Syn.Factory is
      (Self        : in out Factory;
       Name        : String;
       Result_Type : not null Node_Access;
-      Parameters  : Node_Array := No_Nodes)
+      Parameters  : Node_Array := No_Nodes;
+      Indicator   : Overriding_Kind := No_Indicator;
+      Is_Abstract : Boolean := False)
       return not null Node_Access
    is
    begin
-      return Self.New_Subprogram (Name, Parameters, Result_Type);
+      return Self.New_Subprogram
+        (Name, Parameters, Result_Type,
+         Indicator   => Indicator,
+         Is_Abstract => Is_Abstract);
    end New_Function;
 
    ------------
@@ -497,6 +588,26 @@ package body Syn.Factory is
            (Syn.Trees.Tree_Node with
             Text => +Integer_Image (Value, Base, Group)));
    end New_Integer_Literal;
+
+   ------------------------
+   -- New_Interface_Type --
+   ------------------------
+
+   function New_Interface_Type
+     (Self       : in out Factory;
+      Name       : String;
+      Parents    : Node_Array := No_Nodes;
+      Is_Limited : Boolean := False)
+      return not null Node_Access
+   is
+   begin
+      return Self.Add
+        (new Syn.Declaration_Nodes.Interface_Type_Node'
+           (Syn.Trees.Tree_Node with
+            Name       => +Name,
+            Parents    => Syn.Trees.To_Vector (Parents),
+            Is_Limited => Is_Limited));
+   end New_Interface_Type;
 
    --------------
    -- New_Name --
@@ -631,6 +742,24 @@ package body Syn.Factory is
             Default        => Default));
    end New_Parameter;
 
+   ---------------------------
+   -- New_Private_Extension --
+   ---------------------------
+
+   function New_Private_Extension
+     (Self       : in out Factory;
+      Name       : String;
+      Parent     : not null Node_Access;
+      Interfaces : Node_Array := No_Nodes;
+      Is_Limited : Boolean := False)
+      return not null Node_Access
+   is
+   begin
+      return Self.New_Extension
+        (Name, Syn.Declaration_Nodes.Private_Extension, Parent, Interfaces,
+         No_Nodes, Is_Limited);
+   end New_Private_Extension;
+
    ----------------------
    -- New_Private_Type --
    ----------------------
@@ -651,14 +780,37 @@ package body Syn.Factory is
    -------------------
 
    function New_Procedure
-     (Self       : in out Factory;
-      Name       : String;
-      Parameters : Node_Array := No_Nodes)
+     (Self        : in out Factory;
+      Name        : String;
+      Parameters  : Node_Array := No_Nodes;
+      Indicator   : Overriding_Kind := No_Indicator;
+      Is_Abstract : Boolean := False)
       return not null Node_Access
    is
    begin
-      return Self.New_Subprogram (Name, Parameters, null);
+      return Self.New_Subprogram
+        (Name, Parameters, null,
+         Indicator   => Indicator,
+         Is_Abstract => Is_Abstract);
    end New_Procedure;
+
+   ---------------
+   -- New_Raise --
+   ---------------
+
+   function New_Raise
+     (Self           : in out Factory;
+      Exception_Name : not null Node_Access;
+      Message        : Node_Access := null)
+      return not null Node_Access
+   is
+   begin
+      return Self.Add
+        (new Syn.Statement_Nodes.Raise_Node'
+           (Syn.Trees.Tree_Node with
+            Exception_Name => Exception_Name,
+            Message        => Message));
+   end New_Raise;
 
    --------------------
    -- New_Range_Type --
@@ -694,6 +846,25 @@ package body Syn.Factory is
         (new Syn.Expression_Nodes.Raw_Node'
            (Syn.Trees.Tree_Node with Text => +Text));
    end New_Raw;
+
+   --------------------------
+   -- New_Record_Extension --
+   --------------------------
+
+   function New_Record_Extension
+     (Self       : in out Factory;
+      Name       : String;
+      Parent     : not null Node_Access;
+      Interfaces : Node_Array := No_Nodes;
+      Components : Node_Array := No_Nodes;
+      Is_Limited : Boolean := False)
+      return not null Node_Access
+   is
+   begin
+      return Self.New_Extension
+        (Name, Syn.Declaration_Nodes.Record_Extension, Parent, Interfaces,
+         Components, Is_Limited);
+   end New_Record_Extension;
 
    ---------------------
    -- New_Record_Type --
@@ -762,7 +933,9 @@ package body Syn.Factory is
       Name        : String;
       Parameters  : Node_Array;
       Result_Type : Node_Access;
-      Access_Name : String := "")
+      Access_Name : String := "";
+      Indicator   : Overriding_Kind := No_Indicator;
+      Is_Abstract : Boolean := False)
       return not null Node_Access
    is
    begin
@@ -772,7 +945,9 @@ package body Syn.Factory is
             Name             => +Name,
             Parameters       => Syn.Trees.To_Vector (Parameters),
             Result_Type      => Result_Type,
-            Access_Type_Name => +Access_Name));
+            Access_Type_Name => +Access_Name,
+            Indicator        => Indicator,
+            Is_Abstract      => Is_Abstract));
    end New_Subprogram;
 
    -------------------------

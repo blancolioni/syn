@@ -16,6 +16,10 @@ package Syn is
 
    type Parameter_Mode is (In_Mode, Out_Mode, In_Out_Mode);
 
+   type Overriding_Kind is (No_Indicator, Is_Overriding, Is_Not_Overriding);
+   --  The indicator before a subprogram declaration or body: none,
+   --  "overriding", or "not overriding".
+
 private
 
    type Node is abstract tagged limited null record;

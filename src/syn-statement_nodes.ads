@@ -53,6 +53,18 @@ private package Syn.Statement_Nodes is
       Pad   : Natural)
       return Syn.Documents.Document;
 
+   type Raise_Node is new Syn.Trees.Tree_Node with record
+      Exception_Name : Node_Access;
+      Message        : Node_Access;
+      --  Null for a raise statement without a message.
+   end record;
+
+   overriding function Document
+     (Item  : Raise_Node;
+      Style : Syn.Style.Settings;
+      Pad   : Natural)
+      return Syn.Documents.Document;
+
    type Block_Node is new Syn.Trees.Tree_Node with record
       Declarations : Syn.Trees.Node_Vectors.Vector;
       Statements   : Syn.Trees.Node_Vectors.Vector;

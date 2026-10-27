@@ -339,6 +339,139 @@ package body Syn.Declaration_Nodes is
    --------------
 
    overriding function Document
+     (Item  : Interface_Type_Node;
+      Style : Syn.Style.Settings;
+      Pad   : Natural)
+      return Syn.Documents.Document
+   is
+      pragma Unreferenced (Pad);
+      Header : constant String :=
+                 "type " & To_String (Item.Name) & " is "
+                 & (if Item.Is_Limited then "limited " else "")
+                 & "interface";
+      Parents : Syn.Documents.Document := Empty;
+   begin
+      if Item.Parents.Is_Empty then
+         return Text (Header & ";");
+      end if;
+
+      for Parent of Item.Parents loop
+         Parents := Parents & Line & Text ("and ")
+           & Syn.Trees.To_Document (Parent, Style);
+      end loop;
+
+      return Group (Text (Header) & Nest (Style.Continuation, Parents)
+                    & Text (";"));
+   end Document;
+
+   --------------
+   -- Document --
+   --------------
+
+   --  On one line if it fits:
+   --
+   --     type Name is limited new Parent and Other with private;
+   --
+   --  and otherwise with the parent, each interface and the rest of the
+   --  declaration on lines of their own; a record extension's components
+   --  are always on lines of their own:
+   --
+   --     type Name is
+   --       limited new Parent
+   --       and Other
+   --     with record
+   --        Component : Component_Type;
+   --     end record;
+
+   overriding function Document
+     (Item  : Extension_Node;
+      Style : Syn.Style.Settings;
+      Pad   : Natural)
+      return Syn.Documents.Document
+   is
+      pragma Unreferenced (Pad);
+      Ancestry : Syn.Documents.Document :=
+                   Line
+                   & Text ((if Item.Is_Limited then "limited " else "")
+                           & "new ")
+                   & Syn.Trees.To_Document (Item.Parent, Style);
+      Header   : Syn.Documents.Document;
+   begin
+      for Interface_Item of Item.Interfaces loop
+         Ancestry := Ancestry & Line & Text ("and ")
+           & Syn.Trees.To_Document (Interface_Item, Style);
+      end loop;
+
+      Header := Text ("type " & To_String (Item.Name) & " is")
+        & Nest (Style.Continuation, Ancestry);
+
+      if Item.Kind = Private_Extension then
+         return Group
+           (Header & Nest (Style.Continuation, Line & Text ("with private;")));
+      elsif Item.Components.Is_Empty then
+         return Group
+           (Header
+            & Nest (Style.Continuation, Line & Text ("with null record;")));
+      else
+         return Group (Header & Line & Text ("with record"))
+           & Nest (Style.Indent, Syn.Trees.Lines (Item.Components, Style))
+           & Hard_Line & Text ("end record;");
+      end if;
+   end Document;
+
+   --------------
+   -- Document --
+   --------------
+
+   overriding function Document
+     (Item  : Access_Type_Node;
+      Style : Syn.Style.Settings;
+      Pad   : Natural)
+      return Syn.Documents.Document
+   is
+      pragma Unreferenced (Pad);
+      Kind : constant String :=
+               (case Item.Kind is
+                   when Pool_Access     => "access ",
+                   when All_Access      => "access all ",
+                   when Constant_Access => "access constant ");
+   begin
+      return Group
+        (Text ("type " & To_String (Item.Name) & " is")
+         & Nest (Style.Continuation,
+                 Line & Text (Kind)
+                 & Syn.Trees.To_Document (Item.Designated, Style)
+                 & Text (";")));
+   end Document;
+
+   --------------
+   -- Document --
+   --------------
+
+   overriding function Document
+     (Item  : Array_Type_Node;
+      Style : Syn.Style.Settings;
+      Pad   : Natural)
+      return Syn.Documents.Document
+   is
+      pragma Unreferenced (Pad);
+   begin
+      return Group
+        (Text ("type " & To_String (Item.Name) & " is")
+         & Nest (Style.Continuation,
+                 Line
+                 & Group (Text ("array (")
+                          & Syn.Trees.To_Document (Item.Index, Style)
+                          & Text (")") & Line & Text ("of ")
+                          & Syn.Trees.To_Document (Item.Component, Style)
+                          & Text (";"))));
+   end Document;
+
+   --------------
+   -- Document --
+   --------------
+
+   overriding function Document
      (Item  : Parameter_Node;
       Style : Syn.Style.Settings;
       Pad   : Natural)
@@ -370,7 +503,9 @@ package body Syn.Declaration_Nodes is
    is
       pragma Unreferenced (Pad);
    begin
-      return Group (Profile (Item, Style) & Text (";"));
+      return Group
+        (Profile (Item, Style)
+         & Text ((if Item.Is_Abstract then " is abstract;" else ";")));
    end Document;
 
    --------------
@@ -478,11 +613,17 @@ package body Syn.Declaration_Nodes is
       Is_Function : constant Boolean := Item.Result_Type /= null;
       Kind        : constant String :=
                       (if Is_Function then "function" else "procedure");
+      Indicator   : constant String :=
+                      (case Item.Indicator is
+                          when No_Indicator      => "",
+                          when Is_Overriding     => "overriding ",
+                          when Is_Not_Overriding => "not overriding ");
       Result      : Syn.Documents.Document :=
                       (if Length (Item.Access_Type_Name) > 0
                        then Text ("type " & To_String (Item.Access_Type_Name)
                                   & " is access " & Kind)
-                       else Text (Kind & " " & To_String (Item.Name)));
+                       else Text (Indicator & Kind & " "
+                                  & To_String (Item.Name)));
    begin
       if not Item.Parameters.Is_Empty then
          Result := Result

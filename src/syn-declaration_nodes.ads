@@ -139,6 +139,68 @@ private package Syn.Declaration_Nodes is
       Pad   : Natural)
       return Syn.Documents.Document;
 
+   type Interface_Type_Node is new Syn.Trees.Tree_Node with record
+      Name       : Unbounded_String;
+      Parents    : Syn.Trees.Node_Vectors.Vector;
+      Is_Limited : Boolean;
+   end record;
+   --  type Name is [limited] interface [and Parent ...];
+
+   overriding function Document
+     (Item  : Interface_Type_Node;
+      Style : Syn.Style.Settings;
+      Pad   : Natural)
+      return Syn.Documents.Document;
+
+   type Extension_Kind is (Private_Extension, Record_Extension);
+
+   type Extension_Node is new Syn.Trees.Tree_Node with record
+      Name       : Unbounded_String;
+      Kind       : Extension_Kind;
+      Parent     : Node_Access;
+      Interfaces : Syn.Trees.Node_Vectors.Vector;
+      Components : Syn.Trees.Node_Vectors.Vector;
+      --  Unused for a private extension.
+      Is_Limited : Boolean;
+   end record;
+   --  type Name is [limited] new Parent [and Interface ...] with private;
+   --  or the same with a record, or a null record if it has no
+   --  components.
+
+   overriding function Document
+     (Item  : Extension_Node;
+      Style : Syn.Style.Settings;
+      Pad   : Natural)
+      return Syn.Documents.Document;
+
+   type Access_Kind is (Pool_Access, All_Access, Constant_Access);
+   --  "access", "access all" or "access constant".
+
+   type Access_Type_Node is new Syn.Trees.Tree_Node with record
+      Name       : Unbounded_String;
+      Kind       : Access_Kind;
+      Designated : Node_Access;
+   end record;
+
+   overriding function Document
+     (Item  : Access_Type_Node;
+      Style : Syn.Style.Settings;
+      Pad   : Natural)
+      return Syn.Documents.Document;
+
+   type Array_Type_Node is new Syn.Trees.Tree_Node with record
+      Name      : Unbounded_String;
+      Index     : Node_Access;
+      Component : Node_Access;
+   end record;
+   --  type Name is array (Index) of Component;
+
+   overriding function Document
+     (Item  : Array_Type_Node;
+      Style : Syn.Style.Settings;
+      Pad   : Natural)
+      return Syn.Documents.Document;
+
    type Parameter_Node is new Syn.Trees.Tree_Node with record
       Name           : Unbounded_String;
       Mode           : Parameter_Mode;
@@ -163,9 +225,12 @@ private package Syn.Declaration_Nodes is
       Access_Type_Name : Unbounded_String;
       --  If not empty, this is an access-to-subprogram type with this
       --  name, and Name is unused.
+      Indicator        : Overriding_Kind;
+      Is_Abstract      : Boolean;
    end record;
    --  A subprogram declaration, or an access-to-subprogram type. Bodies
-   --  and expression functions use one as their specification.
+   --  and expression functions use one as their specification, and so
+   --  repeat its overriding indicator.
 
    overriding function Document
      (Item  : Subprogram_Node;
