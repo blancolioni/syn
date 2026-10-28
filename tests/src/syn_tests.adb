@@ -535,6 +535,13 @@ procedure Syn_Tests is
                         Mode => In_Out_Mode)],
                     Is_Abstract => True),
                  F.New_Function
+                   ("Seekable_Reader",
+                    Name ("Rose.Interfaces.Seekable_File_Reader"
+                          & ".Seekable_File_Reader_Object'Class"),
+                    [F.New_Parameter
+                       ("Item", Name ("Shape"), Mode => In_Out_Mode)],
+                    Is_Abstract => True),
+                 F.New_Function
                    ("Shape_Cap", Cap,
                     [F.New_Parameter
                        ("Item", Name ("Shape"), Mode => In_Out_Mode),

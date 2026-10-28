@@ -35,8 +35,8 @@ package Layout_Tests is
       Device      : in out Device_Type);
 
    function Home_Directory
-      return Rose.Interfaces.Writable_Directory.Client
-        .Writable_Directory_Client;
+      return
+        Rose.Interfaces.Writable_Directory.Client.Writable_Directory_Client;
 
    Home     : Rose.Interfaces.Writable_Directory.Client
      .Writable_Directory_Client;
