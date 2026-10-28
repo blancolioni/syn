@@ -659,11 +659,18 @@ package body Syn.Declaration_Nodes is
                    & Text (")"));
       end if;
 
+      --  A result type that does not fit after "return" goes on the next
+      --  line.
+
       if Is_Function then
          Result := Result
            & Nest (Style.Continuation + 1,
-                   Line & Text ("return ")
-                   & Syn.Trees.To_Document (Item.Result_Type, Style));
+                   Line & Text ("return")
+                   & Group
+                       (Nest (Style.Continuation,
+                              Line
+                              & Syn.Trees.To_Document
+                                  (Item.Result_Type, Style))));
       end if;
 
       return Result;

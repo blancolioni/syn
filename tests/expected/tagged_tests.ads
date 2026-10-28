@@ -23,6 +23,12 @@ package Tagged_Tests is
       Window : in out Rose.Interfaces.Window.Window_Object'Class)
       return Rose.Capabilities.Capability is abstract;
 
+   function Seekable_Reader
+     (Item : in out Shape)
+      return
+        Rose.Interfaces.Seekable_File_Reader.Seekable_File_Reader_Object'Class
+   is abstract;
+
    function Shape_Cap
      (Item         : in out Shape;
       Interface_Id : Rose.Objects.Endpoint_Id :=
