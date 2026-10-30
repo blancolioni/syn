@@ -548,6 +548,7 @@ package body Syn.Declaration_Nodes is
         & Nest (Style.Indent, Syn.Trees.Lines (Item.Declarations, Style))
         & Hard_Line & Text ("begin")
         & Syn.Statement_Nodes.Statements (Item.Statements, Style)
+        & Syn.Statement_Nodes.Handlers (Item.Handlers, Style)
         & Hard_Line
         & Text ("end " & To_String (Specification.Name) & ";");
    end Document;

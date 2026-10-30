@@ -47,6 +47,9 @@ package body Syn.Factory is
       Is_Limited : Boolean)
       return not null Node_Access;
 
+   procedure Check_Handlers (Items : Node_Array);
+   --  Raise Constraint_Error unless every item is a handler.
+
    procedure Check_Specification
      (Item          : not null Node_Access;
       Function_Only : Boolean);
@@ -67,6 +70,21 @@ package body Syn.Factory is
       Self.Nodes.Append (Item);
       return Item;
    end Add;
+
+   --------------------
+   -- Check_Handlers --
+   --------------------
+
+   procedure Check_Handlers (Items : Node_Array) is
+   begin
+      for Item of Items loop
+         if Item = null
+           or else Item.all not in Syn.Statement_Nodes.Handler_Node'Class
+         then
+            raise Constraint_Error with "not an exception handler";
+         end if;
+      end loop;
+   end Check_Handlers;
 
    -------------------------
    -- Check_Specification --
@@ -294,15 +312,18 @@ package body Syn.Factory is
    function New_Block
      (Self         : in out Factory;
       Declarations : Node_Array := No_Nodes;
-      Statements   : Node_Array)
+      Statements   : Node_Array;
+      Handlers     : Node_Array := No_Nodes)
       return not null Node_Access
    is
    begin
+      Check_Handlers (Handlers);
       return Self.Add
         (new Syn.Statement_Nodes.Block_Node'
            (Syn.Trees.Tree_Node with
             Declarations => Syn.Trees.To_Vector (Declarations),
-            Statements   => Syn.Trees.To_Vector (Statements)));
+            Statements   => Syn.Trees.To_Vector (Statements),
+            Handlers     => Syn.Trees.To_Vector (Handlers)));
    end New_Block;
 
    --------------
@@ -550,6 +571,26 @@ package body Syn.Factory is
          Indicator   => Indicator,
          Is_Abstract => Is_Abstract);
    end New_Function;
+
+   -----------------
+   -- New_Handler --
+   -----------------
+
+   function New_Handler
+     (Self       : in out Factory;
+      Statements : Node_Array;
+      Exceptions : Node_Array := No_Nodes;
+      Choice     : String := "")
+      return not null Node_Access
+   is
+   begin
+      return Self.Add
+        (new Syn.Statement_Nodes.Handler_Node'
+           (Syn.Trees.Tree_Node with
+            Choice     => +Choice,
+            Exceptions => Syn.Trees.To_Vector (Exceptions),
+            Statements => Syn.Trees.To_Vector (Statements)));
+   end New_Handler;
 
    ------------
    -- New_If --
@@ -958,17 +999,20 @@ package body Syn.Factory is
      (Self          : in out Factory;
       Specification : not null Node_Access;
       Declarations  : Node_Array := No_Nodes;
-      Statements    : Node_Array := No_Nodes)
+      Statements    : Node_Array := No_Nodes;
+      Handlers      : Node_Array := No_Nodes)
       return not null Node_Access
    is
    begin
       Check_Specification (Specification, Function_Only => False);
+      Check_Handlers (Handlers);
       return Self.Add
         (new Syn.Declaration_Nodes.Subprogram_Body_Node'
            (Syn.Trees.Tree_Node with
             Specification => Specification,
             Declarations  => Syn.Trees.To_Vector (Declarations),
-            Statements    => Syn.Trees.To_Vector (Statements)));
+            Statements    => Syn.Trees.To_Vector (Statements),
+            Handlers      => Syn.Trees.To_Vector (Handlers)));
    end New_Subprogram_Body;
 
    ---------------

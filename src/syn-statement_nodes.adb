@@ -125,7 +125,40 @@ package body Syn.Statement_Nodes is
            & Hard_Line;
       end if;
       return Result & Text ("begin") & Statements (Item.Statements, Style)
+        & Handlers (Item.Handlers, Style)
         & Hard_Line & Text ("end;");
+   end Document;
+
+   --------------
+   -- Document --
+   --------------
+
+   overriding function Document
+     (Item  : Handler_Node;
+      Style : Syn.Style.Settings;
+      Pad   : Natural)
+      return Syn.Documents.Document
+   is
+      pragma Unreferenced (Pad);
+      Result : Syn.Documents.Document := Text ("when ");
+   begin
+      if Item.Choice /= Null_Unbounded_String then
+         Result := Result & Text (To_String (Item.Choice) & " : ");
+      end if;
+
+      if Item.Exceptions.Is_Empty then
+         Result := Result & Text ("others");
+      else
+         for Index in 1 .. Natural (Item.Exceptions.Length) loop
+            if Index > 1 then
+               Result := Result & Text (" | ");
+            end if;
+            Result := Result
+              & Syn.Trees.To_Document (Item.Exceptions (Index), Style);
+         end loop;
+      end if;
+
+      return Result & Text (" =>") & Statements (Item.Statements, Style);
    end Document;
 
    --------------
@@ -161,6 +194,24 @@ package body Syn.Statement_Nodes is
    begin
       return Text ("null;");
    end Document;
+
+   --------------
+   -- Handlers --
+   --------------
+
+   function Handlers
+     (Items : Syn.Trees.Node_Vectors.Vector;
+      Style : Syn.Style.Settings)
+      return Syn.Documents.Document
+   is
+   begin
+      if Items.Is_Empty then
+         return Empty;
+      else
+         return Hard_Line & Text ("exception")
+           & Nest (Style.Indent, Syn.Trees.Lines (Items, Style));
+      end if;
+   end Handlers;
 
    ----------------
    -- Statements --

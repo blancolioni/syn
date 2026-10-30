@@ -131,9 +131,22 @@ package Syn.Factory is
    function New_Block
      (Self         : in out Factory;
       Declarations : Node_Array := No_Nodes;
-      Statements   : Node_Array)
+      Statements   : Node_Array;
+      Handlers     : Node_Array := No_Nodes)
       return not null Node_Access;
-   --  A block statement, starting with "declare" if it has declarations.
+   --  A block statement, starting with "declare" if it has declarations,
+   --  and with an exception part if it has Handlers, which come from
+   --  New_Handler. Raises Constraint_Error if a handler is anything else.
+
+   function New_Handler
+     (Self       : in out Factory;
+      Statements : Node_Array;
+      Exceptions : Node_Array := No_Nodes;
+      Choice     : String := "")
+      return not null Node_Access;
+   --  An exception handler for a block or a subprogram body:
+   --  when [Choice :] Exceptions => Statements. Exceptions are names
+   --  and are separated by "|"; with none, the handler is for "others".
 
    function New_For_Of_Loop
      (Self       : in out Factory;
@@ -340,12 +353,14 @@ package Syn.Factory is
      (Self          : in out Factory;
       Specification : not null Node_Access;
       Declarations  : Node_Array := No_Nodes;
-      Statements    : Node_Array := No_Nodes)
+      Statements    : Node_Array := No_Nodes;
+      Handlers      : Node_Array := No_Nodes)
       return not null Node_Access;
    --  The body of the subprogram declared by Specification, which must
    --  come from New_Procedure or New_Function. With no statements, the
-   --  body is "null;". Raises Constraint_Error if Specification is not a
-   --  subprogram declaration, or is abstract.
+   --  body is "null;". Handlers, from New_Handler, make an exception part.
+   --  Raises Constraint_Error if Specification is not a subprogram
+   --  declaration, or is abstract, or if a handler is anything else.
 
    function New_Expression_Function
      (Self          : in out Factory;

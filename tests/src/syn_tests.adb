@@ -38,6 +38,8 @@ procedure Syn_Tests is
    function Body_Tests_Spec return not null Node_Access;
    function Command_Main return not null Node_Access;
    function Command_Spec return not null Node_Access;
+   function Handler_Tests_Body return not null Node_Access;
+   function Handler_Tests_Spec return not null Node_Access;
    function Layout_Tests return not null Node_Access;
    function Tagged_Tests_Body return not null Node_Access;
    function Tagged_Tests_Spec return not null Node_Access;
@@ -329,6 +331,80 @@ procedure Syn_Tests is
                F.New_Parameter
                  ("Arguments", Name ("Rose.Command_Line.String_List"))]));
    end Command_Spec;
+
+   ------------------------
+   -- Handler_Tests_Body --
+   ------------------------
+
+   function Handler_Tests_Body return not null Node_Access is
+   begin
+      return F.New_Compilation_Unit
+        (Context =>
+           [F.New_With ("Rose.Invocation"),
+            F.New_With ("Rose.System_Calls")],
+         Item    =>
+           F.New_Package_Body
+             ("Handler_Tests",
+              [F.New_Subprogram_Body
+                 (F.New_Procedure
+                    ("Dispatch", [Invocation_Parameter]),
+                  Declarations =>
+                    [F.New_Object ("Count", Name ("Natural"))],
+                  Statements   =>
+                    [F.New_Assignment
+                       (Name ("Count"),
+                        Call ("Rose.System_Calls.Count",
+                              [Name ("Parameters")]))],
+                  Handlers     =>
+                    [F.New_Handler
+                       ([Call_Statement
+                           ("Rose.System_Calls.Initialize_Reply",
+                            [Name ("Parameters"),
+                             Name ("Parameters.Reply_Cap")]),
+                         Call_Statement
+                           ("Rose.System_Calls.Send_Error",
+                            [Name ("Parameters"),
+                             Name ("Rose.Invocation.Unknown_Error")])])]),
+
+               F.New_Subprogram_Body
+                 (F.New_Procedure ("Guarded", [Invocation_Parameter]),
+                  Statements =>
+                    [F.New_Block
+                       (Declarations =>
+                          [F.New_Object ("Count", Name ("Natural"))],
+                        Statements   =>
+                          [F.New_Assignment
+                             (Name ("Count"),
+                              Call ("Rose.System_Calls.Count",
+                                    [Name ("Parameters")]))],
+                        Handlers     =>
+                          [F.New_Handler
+                             ([Call_Statement
+                                 ("Rose.System_Calls.Send_Error",
+                                  [Name ("Parameters"),
+                                   Name ("Rose.Invocation.Closed")])],
+                              Exceptions =>
+                                [Name ("Constraint_Error"),
+                                 Name ("Program_Error")],
+                              Choice     => "Error"),
+                           F.New_Handler
+                             ([F.New_Raise (Name ("Program_Error"))])])])]));
+   end Handler_Tests_Body;
+
+   ------------------------
+   -- Handler_Tests_Spec --
+   ------------------------
+
+   function Handler_Tests_Spec return not null Node_Access is
+   begin
+      return F.New_Compilation_Unit
+        (Context => [F.New_With ("Rose.Invocation")],
+         Item    =>
+           F.New_Package
+             ("Handler_Tests",
+              [F.New_Procedure ("Dispatch", [Invocation_Parameter]),
+               F.New_Procedure ("Guarded", [Invocation_Parameter])]));
+   end Handler_Tests_Spec;
 
    ------------------
    -- Layout_Tests --
@@ -695,6 +771,8 @@ begin
    Check (Layout_Tests);
    Check (Body_Tests_Spec);
    Check (Body_Tests_Body);
+   Check (Handler_Tests_Spec);
+   Check (Handler_Tests_Body);
    Check (Command_Spec);
    Check (Command_Main);
    Check (Tagged_Tests_Spec);
