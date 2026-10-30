@@ -68,10 +68,27 @@ private package Syn.Statement_Nodes is
    type Block_Node is new Syn.Trees.Tree_Node with record
       Declarations : Syn.Trees.Node_Vectors.Vector;
       Statements   : Syn.Trees.Node_Vectors.Vector;
+      Handlers     : Syn.Trees.Node_Vectors.Vector;
+      --  Handler_Nodes, after "exception"; none for no exception part.
    end record;
 
    overriding function Document
      (Item  : Block_Node;
+      Style : Syn.Style.Settings;
+      Pad   : Natural)
+      return Syn.Documents.Document;
+
+   type Handler_Node is new Syn.Trees.Tree_Node with record
+      Choice     : Unbounded_String;
+      --  The choice parameter, or empty.
+      Exceptions : Syn.Trees.Node_Vectors.Vector;
+      --  The names of the exceptions handled; empty for "others".
+      Statements : Syn.Trees.Node_Vectors.Vector;
+   end record;
+   --  An exception handler: when [Choice :] Exceptions => Statements
+
+   overriding function Document
+     (Item  : Handler_Node;
       Style : Syn.Style.Settings;
       Pad   : Natural)
       return Syn.Documents.Document;
@@ -102,5 +119,13 @@ private package Syn.Statement_Nodes is
       return Syn.Documents.Document;
    --  Items, one per line, each preceded by a line break, indented one
    --  level; "null;" if Items is empty.
+
+   function Handlers
+     (Items : Syn.Trees.Node_Vectors.Vector;
+      Style : Syn.Style.Settings)
+      return Syn.Documents.Document;
+   --  The exception part of a body or block: "exception" on its own line
+   --  at the level of "begin", and Items indented below it. Empty if
+   --  Items is empty.
 
 end Syn.Statement_Nodes;

@@ -245,6 +245,8 @@ private package Syn.Declaration_Nodes is
       --  A Subprogram_Node.
       Declarations  : Syn.Trees.Node_Vectors.Vector;
       Statements    : Syn.Trees.Node_Vectors.Vector;
+      Handlers      : Syn.Trees.Node_Vectors.Vector;
+      --  Handler_Nodes; none for no exception part.
    end record;
 
    overriding function Document
