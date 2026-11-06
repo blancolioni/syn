@@ -44,22 +44,29 @@ package body Syn.Expression_Nodes is
 
       function Is_Dotted_Name return Boolean;
       --  True if Source is an identifier or a name of identifiers
-      --  separated by dots, and not a literal.
+      --  separated by dots, and not a literal. The name can end with an
+      --  attribute, as in A.B'Class, which stays with the last selector.
 
       --------------------
       -- Is_Dotted_Name --
       --------------------
 
       function Is_Dotted_Name return Boolean is
+         Attribute : Boolean := False;
+         --  After the apostrophe of an attribute, which has no dots.
       begin
          if Source'Length = 0
            or else Source (Source'First) not in 'A' .. 'Z' | 'a' .. 'z'
+           or else Source (Source'Last) = '''
          then
             return False;
          end if;
 
          for Ch of Source loop
-            if Ch not in 'A' .. 'Z' | 'a' .. 'z' | '0' .. '9' | '_' | '.'
+            if Ch = ''' and then not Attribute then
+               Attribute := True;
+            elsif Ch not in 'A' .. 'Z' | 'a' .. 'z' | '0' .. '9' | '_'
+              and then (Attribute or else Ch /= '.')
             then
                return False;
             end if;
