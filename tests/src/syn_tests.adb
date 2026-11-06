@@ -468,7 +468,11 @@ procedure Syn_Tests is
                  (Name        => "Home",
                   Object_Type =>
                     Name ("Rose.Interfaces.Writable_Directory.Client"
-                          & ".Writable_Directory_Client"))]));
+                          & ".Writable_Directory_Client")),
+               F.New_Function
+                 ("New_Version",
+                  Name ("Rose.Interfaces.Transactional_Writable_File"
+                        & ".Transactional_Writable_File_Object'Class"))]));
    end Layout_Tests;
 
    ---------------

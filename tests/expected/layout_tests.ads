@@ -41,4 +41,9 @@ package Layout_Tests is
    Home     : Rose.Interfaces.Writable_Directory.Client
      .Writable_Directory_Client;
 
+   function New_Version
+      return
+        Rose.Interfaces.Transactional_Writable_File
+          .Transactional_Writable_File_Object'Class;
+
 end Layout_Tests;
