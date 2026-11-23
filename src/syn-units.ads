@@ -20,6 +20,7 @@ package Syn.Units is
       Directory : String;
       Style     : Syn.Style.Settings := Syn.Style.Default);
    --  Write the source text of Unit to File_Name (Unit) in Directory,
-   --  replacing any file already there.
+   --  replacing any file already there, unless that file already holds
+   --  exactly that text: then it is left alone, timestamp and all.
 
 end Syn.Units;
