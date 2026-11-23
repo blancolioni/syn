@@ -12,6 +12,9 @@ package body Syn.Units is
    procedure Check_Unit (Unit : not null Node_Access);
    --  Raise Constraint_Error if Unit is not a compilation unit.
 
+   function Holds_Text (Path : String; Text : String) return Boolean;
+   --  True if Path is an ordinary file whose contents are exactly Text.
+
    ----------------
    -- Check_Unit --
    ----------------
@@ -38,6 +41,34 @@ package body Syn.Units is
            (Ada.Strings.Unbounded.To_String (Item.Unit_Name), Item.Is_Spec);
       end;
    end File_Name;
+
+   ----------------
+   -- Holds_Text --
+   ----------------
+
+   function Holds_Text (Path : String; Text : String) return Boolean is
+      use type Ada.Directories.File_Kind;
+      use type Ada.Directories.File_Size;
+   begin
+      if not Ada.Directories.Exists (Path)
+        or else Ada.Directories.Kind (Path) /= Ada.Directories.Ordinary_File
+        or else Ada.Directories.Size (Path)
+                  /= Ada.Directories.File_Size (Text'Length)
+      then
+         return False;
+      end if;
+
+      declare
+         use Ada.Streams.Stream_IO;
+         File     : File_Type;
+         Contents : String (1 .. Text'Length);
+      begin
+         Open (File, In_File, Path);
+         String'Read (Stream (File), Contents);
+         Close (File);
+         return Contents = Text;
+      end;
+   end Holds_Text;
 
    -------------
    -- To_Text --
@@ -74,9 +105,14 @@ package body Syn.Units is
       Text : constant String := To_Text (Unit, Style);
       File : File_Type;
    begin
-      Create (File, Out_File, Path);
-      String'Write (Stream (File), Text);
-      Close (File);
+      --  An unchanged file keeps its timestamp, so that a build does not
+      --  recompile it (idle#129).
+
+      if not Holds_Text (Path, Text) then
+         Create (File, Out_File, Path);
+         String'Write (Stream (File), Text);
+         Close (File);
+      end if;
    end Write;
 
 end Syn.Units;

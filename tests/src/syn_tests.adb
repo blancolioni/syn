@@ -3,6 +3,7 @@
 --  expected/. Run from the tests directory. check-style.sh then compiles
 --  every expected file with GNAT's style checks.
 
+with Ada.Calendar;
 with Ada.Command_Line;
 with Ada.Directories;
 with Ada.Streams.Stream_IO;
@@ -25,6 +26,11 @@ procedure Syn_Tests is
    procedure Check (Unit : not null Node_Access);
    --  Write Unit to the output directory and compare it with the expected
    --  file.
+
+   procedure Check_Unchanged;
+   --  Writing a unit over a file that already holds its text leaves the
+   --  file alone, timestamp and all; over a file that differs, even with
+   --  the same length, replaces it (idle#129).
 
    function Read_File (Path : String) return String;
 
@@ -284,6 +290,71 @@ procedure Syn_Tests is
          Failures := Failures + 1;
       end if;
    end Check;
+
+   ---------------------
+   -- Check_Unchanged --
+   ---------------------
+
+   procedure Check_Unchanged is
+      use type Ada.Calendar.Time;
+
+      procedure Report (Passed : Boolean; Test : String);
+
+      procedure Write_File (Path : String; Text : String);
+
+      ------------
+      -- Report --
+      ------------
+
+      procedure Report (Passed : Boolean; Test : String) is
+      begin
+         if Passed then
+            Ada.Text_IO.Put_Line ("PASS " & Test);
+         else
+            Ada.Text_IO.Put_Line ("FAIL " & Test);
+            Failures := Failures + 1;
+         end if;
+      end Report;
+
+      ----------------
+      -- Write_File --
+      ----------------
+
+      procedure Write_File (Path : String; Text : String) is
+         use Ada.Streams.Stream_IO;
+         File : File_Type;
+      begin
+         Create (File, Out_File, Path);
+         String'Write (Stream (File), Text);
+         Close (File);
+      end Write_File;
+
+      Unit   : constant not null Node_Access := Timer;
+      Path   : constant String :=
+                 Ada.Directories.Compose
+                   (Output_Directory, Syn.Units.File_Name (Unit));
+      Text   : constant String := Syn.Units.To_Text (Unit);
+      Before : Ada.Calendar.Time;
+   begin
+      Syn.Units.Write (Unit, Output_Directory);
+      Before := Ada.Directories.Modification_Time (Path);
+
+      --  File timestamps may only have a resolution of a second.
+
+      delay 1.1;
+      Syn.Units.Write (Unit, Output_Directory);
+      Report
+        (Ada.Directories.Modification_Time (Path) = Before,
+         "an unchanged file keeps its timestamp");
+
+      Write_File (Path, "stale");
+      Syn.Units.Write (Unit, Output_Directory);
+      Report (Read_File (Path) = Text, "a shorter file is replaced");
+
+      Write_File (Path, Text (Text'First .. Text'Last - 1) & "X");
+      Syn.Units.Write (Unit, Output_Directory);
+      Report (Read_File (Path) = Text, "a same-length file is replaced");
+   end Check_Unchanged;
 
    ------------------
    -- Command_Main --
@@ -781,6 +852,7 @@ begin
    Check (Command_Main);
    Check (Tagged_Tests_Spec);
    Check (Tagged_Tests_Body);
+   Check_Unchanged;
 
    if Failures > 0 then
       Ada.Text_IO.Put_Line
